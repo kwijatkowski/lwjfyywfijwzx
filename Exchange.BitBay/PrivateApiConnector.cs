@@ -79,6 +79,7 @@ namespace Exchange.BitBay
 
             string moment = unixTimestamp.ToString();
 
+            //todo: think if need to automaticaly close connection
             HttpClient client = new HttpClient(new HttpClientHandler()
             {
                 ClientCertificateOptions = ClientCertificateOption.Automatic

@@ -58,6 +58,7 @@ namespace Exchange.BitBay
 
         private async Task<T> GetDataFromAddress<T>(string relativeAddress)
         {
+            //todo: think if need to automaticaly close connection
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_baseAddress);

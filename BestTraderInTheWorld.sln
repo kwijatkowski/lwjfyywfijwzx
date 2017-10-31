@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.BitBay", "Exchange
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{F13F453D-6847-4ED4-A5E3-F46535D33C11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.Kraken", "Exchange.Kraken\Exchange.Kraken.csproj", "{CDAF7087-503F-4CE3-81A5-686D5300A487}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F13F453D-6847-4ED4-A5E3-F46535D33C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F13F453D-6847-4ED4-A5E3-F46535D33C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F13F453D-6847-4ED4-A5E3-F46535D33C11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
