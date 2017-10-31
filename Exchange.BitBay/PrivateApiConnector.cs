@@ -15,12 +15,8 @@ namespace Exchange.BitBay
 {
     public class PrivateApiConnector
     {
-        #region keys
-
         private readonly string _publicKey;
         private readonly string _privateKey;
-
-        #endregion keys
 
         private const string customNTPserver = "aaa.com";
         private string _baseAddress;
@@ -144,7 +140,7 @@ namespace Exchange.BitBay
 
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
-            //socket.ReceiveTimeout = 1000;
+            socket.ReceiveTimeout = 1000;
             socket.Connect(ipEndPoint);
             socket.Send(ntpData);
             socket.Receive(ntpData);
