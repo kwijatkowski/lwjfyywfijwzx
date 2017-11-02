@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>startup</RootNamespace>
     <AssemblyName>startup</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -62,6 +63,10 @@
     <ProjectReference Include="..\Exchange.Kraken\Exchange.Kraken.csproj">
       <Project>{cdaf7087-503f-4ce3-81a5-686d5300a487}</Project>
       <Name>Exchange.Kraken</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Exchange.MarketUtils\Exchange.MarketUtils.csproj">
+      <Project>{8a4b69a0-43f9-4e55-ba5d-a7a7fc73513c}</Project>
+      <Name>Exchange.MarketUtils</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

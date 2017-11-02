@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Exchange.Kraken
 {
@@ -22,71 +25,108 @@ namespace Exchange.Kraken
             return await GetDataFromAddress<string>(reativaAddress);
         }
 
-        //todo: pass parameters to obtain less data
-        public async Task<string> GetAssets()
+        public async Task<string> GetFees()
         {
-            string reativaAddress = "Assets";
-            return await GetDataFromAddress<string>(reativaAddress);
+            string method = "AssetPairs";
+            Dictionary<string, string> parameters =
+                new Dictionary<string, string>() {
+                { "info","fees" }
+                };
+
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
+        }
+        
+        public async Task<string> GetAssets(Dictionary<string,string> parameters = null)
+        {
+            string method = "Assets";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
-        //todo: pass parameters to obtain less data
-        public async Task<string> GetAssetPairs()
+        public async Task<string> GetAssetPairs(Dictionary<string, string> parameters = null)
         {
-            string reativaAddress = "AssetPairs";
-            return await GetDataFromAddress<string>(reativaAddress);
+            string method = "AssetPairs";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
-        public async Task<string> GetTicker(string pairs)
+        /// <summary>
+        /// Obtains array of pair names and their ticker info
+        /// </summary>
+        /// <param name="pair">pair = comma delimited list of asset pairs to get info on</param>
+        /// <returns></returns>
+        public async Task<string> GetTicker(string pair)
         {
             //BCHEUR pair
-            string reativaAddress = $"Ticker?pair={pairs}";
-            return await GetDataFromAddress<string>(reativaAddress);
-        }
+            string method = "Ticker";
 
-        //todo: pass interval and since param
-        public async Task<string> GetOHLCdata(string pair)
+            Dictionary<string, string> parameters =
+                new Dictionary<string, string>() {
+                { "pair", pair }
+                };
+
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
+        }
+        
+        public async Task<string> GetOHLCdata(Dictionary<string, string> parameters)
         {
             //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
             //BCHEUR pair
-            string reativaAddress = $"OHLC?pair={pair}";
-            return await GetDataFromAddress<string>(reativaAddress);
+
+            string method = "OHLC";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
         //todo: pass count param
-        public async Task<string> GetOrderBook(string pair)
+        public async Task<string> GetOrderBook(Dictionary<string, string> parameters)
         {
             //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
             //BCHEUR pair
-            string reativaAddress = $"Depth?pair={pair}";
-            return await GetDataFromAddress<string>(reativaAddress);
+            string method = "Depth";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
         //todo: pass since param to get less data
-        public async Task<string> GetRecentTrades(string pair)
+        public async Task<string> GetRecentTrades(Dictionary<string, string> parameters)
         {
             //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
             //BCHEUR pair
-            string reativaAddress = $"Trades?pair={pair}";
-            return await GetDataFromAddress<string>(reativaAddress);
+            string method = "Trades";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
         //todo: pass since param
-        public async Task<string> GetRecentSpreadData(string pair)
+        public async Task<string> GetRecentSpreadData(Dictionary<string, string> parameters)
         {
             //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
             //BCHEUR pair
-            string reativaAddress = $"Spread?pair={pair}";
-            return await GetDataFromAddress<string>(reativaAddress);
+            string method = "Spread";
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
 
-        private async Task<T> GetDataFromAddress<T>(string relativeAddress)
+        //  HELP
+
+        private string BuildRequestUrl(string baseAddress, string method, Dictionary<string, string> parameters = null)
+        {
+            if (parameters != null)
+            {
+                NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
+
+                foreach (var pair in parameters)
+                    queryString[pair.Key] = pair.Value;
+
+                return string.Concat(baseAddress, method, "?", queryString.ToString());
+            }
+            else
+                return string.Concat(baseAddress, method);
+        }
+
+        private async Task<T> GetDataFromAddress<T>(string address)
         {
             //todo: think if need to automaticaly close connection
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_baseAddress);
 
-                HttpResponseMessage response = await client.GetAsync(string.Concat(_baseAddress, relativeAddress));
+                HttpResponseMessage response = await client.GetAsync(address);
 
                 Type desiredType = typeof(T);
 

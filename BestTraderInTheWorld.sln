@@ -1,13 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.BitBay", "Exchange.BitBay\Exchange.BitBay.csproj", "{E6E13BBF-B6D1-4A9A-9EB3-C18B888F6EBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{F13F453D-6847-4ED4-A5E3-F46535D33C11}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.Kraken", "Exchange.Kraken\Exchange.Kraken.csproj", "{CDAF7087-503F-4CE3-81A5-686D5300A487}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1ABFFF86-90AE-4262-9374-613417602574}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{88D14B9B-613B-457D-8DF9-C3C8E635E571}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.BitBayTests", "Exchange.BitBayTests\Exchange.BitBayTests.csproj", "{2A5197B8-1264-451D-A1EB-F272FABA9643}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.KrakenTests", "Exchange.KrakenTests\Exchange.KrakenTests.csproj", "{2B8EA4A3-8222-40D4-9239-01A0AA9B7185}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.MarketUtils", "Exchange.MarketUtils\Exchange.MarketUtils.csproj", "{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,8 +37,31 @@ Global
 		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDAF7087-503F-4CE3-81A5-686D5300A487}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A5197B8-1264-451D-A1EB-F272FABA9643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A5197B8-1264-451D-A1EB-F272FABA9643}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A5197B8-1264-451D-A1EB-F272FABA9643}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A5197B8-1264-451D-A1EB-F272FABA9643}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E6E13BBF-B6D1-4A9A-9EB3-C18B888F6EBE} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
+		{F13F453D-6847-4ED4-A5E3-F46535D33C11} = {1ABFFF86-90AE-4262-9374-613417602574}
+		{CDAF7087-503F-4CE3-81A5-686D5300A487} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
+		{2A5197B8-1264-451D-A1EB-F272FABA9643} = {1ABFFF86-90AE-4262-9374-613417602574}
+		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185} = {1ABFFF86-90AE-4262-9374-613417602574}
+		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {22395B8D-7265-41E5-8AE7-00BF3BCED312}
 	EndGlobalSection
 EndGlobal
