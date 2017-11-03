@@ -120,7 +120,6 @@ namespace Exchange.BitBay
             return returnMsg;
         }
 
-
         private string ByteToString(byte[] buff)
         {
             string sbinary = "";
@@ -128,7 +127,6 @@ namespace Exchange.BitBay
                 sbinary += buff[i].ToString("x2"); /* hex format */
             return sbinary;
         }
-
 
         public DateTime GetNetworkTime(string ntpServerAddress)
         {

@@ -9,6 +9,7 @@ using Exchange.Kraken;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Exchange.MarketUtils;
 
 namespace Exchange.KrakenTests
 {
@@ -16,11 +17,11 @@ namespace Exchange.KrakenTests
     {
         public string apiAddress = "https://api.kraken.com/0/public/";
 
-        [TestCase("DASHXBT", OperationCostCalculator.OPERATION_TYPE.maker, 125000, ExpectedResult = 0.0012)]
-        [TestCase("EOSETH", OperationCostCalculator.OPERATION_TYPE.taker, 5100000, ExpectedResult = 0.0012)]
-        [TestCase("BCHXBT", OperationCostCalculator.OPERATION_TYPE.taker, 0, ExpectedResult = 0.0026)]
-        [TestCase("DASHEUR", OperationCostCalculator.OPERATION_TYPE.maker, 0, ExpectedResult = 0.0016)]
-        public decimal TransactionFees(string currencyPair, OperationCostCalculator.OPERATION_TYPE operationType, decimal volume)
+        [TestCase("DASHXBT", OperationTypes.OPERATION_TYPE.maker, 125000, ExpectedResult = 0.0012)]
+        [TestCase("EOSETH", OperationTypes.OPERATION_TYPE.taker, 5100000, ExpectedResult = 0.0012)]
+        [TestCase("BCHXBT", OperationTypes.OPERATION_TYPE.taker, 0, ExpectedResult = 0.0026)]
+        [TestCase("DASHEUR", OperationTypes.OPERATION_TYPE.maker, 0, ExpectedResult = 0.0016)]
+        public decimal TransactionFees(string currencyPair, OperationTypes.OPERATION_TYPE operationType, decimal volume)
         {
             OperationCostCalculator calc = new OperationCostCalculator(apiAddress);
 

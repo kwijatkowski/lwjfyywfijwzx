@@ -60,6 +60,10 @@
       <Project>{e6e13bbf-b6d1-4a9a-9eb3-c18b888f6ebe}</Project>
       <Name>Exchange.BitBay</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Exchange.MarketUtils\Exchange.MarketUtils.csproj">
+      <Project>{8a4b69a0-43f9-4e55-ba5d-a7a7fc73513c}</Project>
+      <Name>Exchange.MarketUtils</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

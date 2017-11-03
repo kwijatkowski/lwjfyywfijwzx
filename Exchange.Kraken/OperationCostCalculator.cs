@@ -4,14 +4,16 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System;
+using Exchange.MarketUtils;
 
 namespace Exchange.Kraken
 {
-    public class OperationCostCalculator
+    public class OperationCostCalculator : IOperationFeesCalculator
     {
-        public enum TRANSFER_DIR { incomming, outgoing };
-        public enum FEE_TYPE { absolute, fraction };
-        public enum OPERATION_TYPE { maker, taker };
+        //public enum TRANSFER_DIR { incomming, outgoing };
+        //public enum FEE_TYPE { absolute, fraction };
+        //public enum OPERATION_TYPE { maker, taker };
 
         private static Dictionary<string, SingleCurrencyFees> _fees;
 
@@ -21,6 +23,17 @@ namespace Exchange.Kraken
             string json = publicApiConnector.GetFees().Result;
             JObject j = JObject.Parse(json);
 
+            JArray errors = (JArray)j["error"];
+            if (errors.Count > 0)
+            {
+                string errMsg = string.Empty;
+
+                foreach (var error in errors)
+                    errMsg += error + Environment.NewLine;
+
+                throw new System.Exception(errMsg);
+            }
+
             if (_fees == null) //should not change during runtime
             {
                 string feesString = j.SelectToken("result").ToString();
@@ -28,7 +41,7 @@ namespace Exchange.Kraken
             }
         }
 
-        public decimal CalculateTransferCost(string currency, TRANSFER_DIR direction, decimal transferAmount = -1)
+        public decimal CalculateTransferCost(string currency, OperationTypes.TRANSFER_DIR direction, decimal transferAmount = -1)
         {
             return 1;
         }
@@ -40,7 +53,7 @@ namespace Exchange.Kraken
         /// <param name="operationType"></param>
         /// <param name="volumeUSD"></param>
         /// <returns>Fees as % eg. 0.5% => 0.005</returns>
-        public decimal CalculateTransactionFee(string currencyPair, OPERATION_TYPE operationType, decimal volumeUSD)
+        public decimal CalculateTransactionFee(string currencyPair, OperationTypes.OPERATION_TYPE operationType, decimal volumeUSD)
         {
             SingleCurrencyFees singleCurrencyFees;
             decimal fee = 1; //100% if we do not find any - this should prevent any transactions in case of error
@@ -54,9 +67,9 @@ namespace Exchange.Kraken
             {
                 decimal[,] fees = null;
 
-                if (operationType == OPERATION_TYPE.maker)
+                if (operationType == OperationTypes.OPERATION_TYPE.maker)
                     fees = singleCurrencyFees.fees_maker;
-                else if (operationType == OPERATION_TYPE.taker)
+                else if (operationType == OperationTypes.OPERATION_TYPE.taker)
                     fees = singleCurrencyFees.fees;
                 else
                     throw new InvalidDataException("Invalid operation type");

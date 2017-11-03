@@ -50,6 +50,7 @@
     <Compile Include="KrakenFees.cs" />
     <Compile Include="KrakenTicker.cs" />
     <Compile Include="OperationCostCalculator.cs" />
+    <Compile Include="PrivateApiConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicApiConnector.cs" />
   </ItemGroup>

@@ -35,8 +35,8 @@ namespace Exchange.Kraken
 
             return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
-        
-        public async Task<string> GetAssets(Dictionary<string,string> parameters = null)
+
+        public async Task<string> GetAssets(Dictionary<string, string> parameters = null)
         {
             string method = "Assets";
             return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
@@ -65,7 +65,7 @@ namespace Exchange.Kraken
 
             return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
         }
-        
+
         public async Task<string> GetOHLCdata(Dictionary<string, string> parameters)
         {
             //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5

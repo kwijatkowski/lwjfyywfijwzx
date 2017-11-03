@@ -16,10 +16,10 @@ namespace Exchange.BitBay
         
         PublicApiConnector publicApiConnector;
 
-        public BitBay(string publicApiURL, string privateApiURL)
+        public BitBay(ExchangeConfig config)
         {
-            _publicApiURL = publicApiURL;
-            _privateApiURL = privateApiURL;
+            _publicApiURL = config.publicApiAddress;
+            _privateApiURL = config.privateApiAddress;
 
             publicApiConnector = new PublicApiConnector(_publicApiURL);
         }

@@ -17,10 +17,10 @@ namespace Exchange.Kraken
         private PublicApiConnector publicApiConnector;
         //private PrivateApiConnector publicApiConnector;
 
-        public Kraken(string publicApiURL, string privateApiURL)
+        public Kraken(ExchangeConfig config)
         {
-            _publicApiURL = publicApiURL;
-            _privateApiURL = privateApiURL;
+            _publicApiURL = config.publicApiAddress;
+            _privateApiURL = config.privateApiAddress;
 
             publicApiConnector = new PublicApiConnector(_publicApiURL);
         }
@@ -35,6 +35,7 @@ namespace Exchange.Kraken
             string pair = string.Concat(CurrenciesNamesMap.MapName(currency1), CurrenciesNamesMap.MapName(currency2));
             string tickerJson = await publicApiConnector.GetTicker(pair);
             JObject j = JObject.Parse(tickerJson);
+            CheckErrorsAndThrow(j);
             return JsonConvert.DeserializeObject<Dictionary<string, KrakenTicker>>(j.SelectToken("result").ToString());
         }
 
@@ -56,6 +57,20 @@ namespace Exchange.Kraken
         public void GetOrderbook()
         {
             throw new NotImplementedException();
+        }
+
+        public void CheckErrorsAndThrow(JObject response)
+        {
+            JArray errors = (JArray)response["error"];
+            if (errors.Count > 0)
+            {
+                string errMsg = string.Empty;
+
+                foreach (var error in errors)
+                    errMsg += error + Environment.NewLine;
+
+                throw new System.Exception(errMsg);
+            }
         }
     }
 }
