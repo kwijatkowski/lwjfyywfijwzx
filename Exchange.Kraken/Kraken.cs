@@ -14,7 +14,7 @@ namespace Exchange.Kraken
         private string _publicApiURL;
         private string _privateApiURL;
 
-        private PublicApiConnector publicApiConnector;
+        private PublicApiConnector _publicApiConnector;
         //private PrivateApiConnector publicApiConnector;
 
         public Kraken(ExchangeConfig config)
@@ -22,7 +22,7 @@ namespace Exchange.Kraken
             _publicApiURL = config.publicApiAddress;
             _privateApiURL = config.privateApiAddress;
 
-            publicApiConnector = new PublicApiConnector(_publicApiURL);
+            _publicApiConnector = new PublicApiConnector(_publicApiURL);
         }
 
         public string GetName()
@@ -33,7 +33,7 @@ namespace Exchange.Kraken
         public async Task<Dictionary<string, KrakenTicker>> GetKrakenTicker(string currency1, string currency2)
         {
             string pair = string.Concat(CurrenciesNamesMap.MapName(currency1), CurrenciesNamesMap.MapName(currency2));
-            string tickerJson = await publicApiConnector.GetTicker(pair);
+            string tickerJson = await _publicApiConnector.GetTicker(pair);
             JObject j = JObject.Parse(tickerJson);
             CheckErrorsAndThrow(j);
             return JsonConvert.DeserializeObject<Dictionary<string, KrakenTicker>>(j.SelectToken("result").ToString());

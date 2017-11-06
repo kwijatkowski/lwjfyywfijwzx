@@ -4,18 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F13F453D-6847-4ED4-A5E3-F46535D33C11}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>startup</RootNamespace>
-    <AssemblyName>startup</AssemblyName>
+    <RootNamespace>Exchange.Poloniex</RootNamespace>
+    <AssemblyName>Exchange.Poloniex</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -25,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -40,6 +37,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,30 +46,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestApp.cs" />
+    <Compile Include="CurrenciesNamesMap.cs" />
+    <Compile Include="Poloniex.cs" />
+    <Compile Include="PoloniexCurrenciesInfo.cs" />
+    <Compile Include="PoloniexTicker.cs" />
+    <Compile Include="PublicApiConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Exchange.BitBay\Exchange.BitBay.csproj">
-      <Project>{e6e13bbf-b6d1-4a9a-9eb3-c18b888f6ebe}</Project>
-      <Name>Exchange.BitBay</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Exchange.Kraken\Exchange.Kraken.csproj">
-      <Project>{cdaf7087-503f-4ce3-81a5-686d5300a487}</Project>
-      <Name>Exchange.Kraken</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Exchange.MarketUtils\Exchange.MarketUtils.csproj">
       <Project>{8a4b69a0-43f9-4e55-ba5d-a7a7fc73513c}</Project>
       <Name>Exchange.MarketUtils</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Exchange.Poloniex\Exchange.Poloniex.csproj">
-      <Project>{84c9edc8-f9cf-4c6b-80a3-b84983ab24b2}</Project>
-      <Name>Exchange.Poloniex</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

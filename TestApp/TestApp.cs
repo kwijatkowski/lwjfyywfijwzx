@@ -1,5 +1,6 @@
 ﻿using Exchange.BitBay;
 using Exchange.Kraken;
+using Exchange.Poloniex;
 using Exchange.MarketUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -37,40 +38,48 @@ namespace startup
 
                 List<IExchange> exchanges = new List<IExchange>() {
                     new BitBay(bbConfig),
-                    new Kraken(krakenConfig)
+                    new Kraken(krakenConfig),
+                    //new Poloniex("https://poloniex.com/public")
             };
 
-                List<TickerListItem> tickers = new List<TickerListItem>(exchanges.Count * commonCurrencies.Count);
-
-                foreach (string currency in commonCurrencies)
-                {
-                    foreach (var exchange in exchanges)
-                    {
-                        var tickerListItem = new TickerListItem()
-                        {
-                            Exchange = exchange.GetName(),
-                            currency1 = currency,
-                            currency2 = currency2,
-                            ticker = await exchange.GetTicker(currency, currency2)
-                        };
-
-                        tickers.Add(tickerListItem);
-
-                        Console.WriteLine($"{tickerListItem.Exchange} {currency}/{currency2} last {tickerListItem.ticker.last.ToString("F")} min {tickerListItem.ticker.min.ToString("F")} max {tickerListItem.ticker.max.ToString("F")} ask {tickerListItem.ticker.ask.ToString("F")} bid {tickerListItem.ticker.bid.ToString("F")}");
-                    }
-                    Console.WriteLine("------------------------------------------------------------------------------------------------------------");
-                }
-
-                var  sortedByPrifit = CalculatePriceDifference(tickers);
-
-                foreach (var item in sortedByPrifit)
-                    Console.WriteLine($"{item.Item1}/{item.Item2} {item.Item3} {string.Format("{0:0.###}",item.Item4)}% ==> {item.Item5.ToString("F")}$" );
+                var poloniex = new Poloniex("https://poloniex.com/public");
+                //var result = await poloniex.GetTicker("", currency2);
+                await poloniex.GetCurrenciesMap();
 
                 //string.Format("{0:0.###}",
             }).GetAwaiter().GetResult();
 
             Console.WriteLine("Finished...");
             Console.ReadLine();
+        }
+
+        public static async void GetTickersAndCalculatePriceDifferences(List<IExchange> exchanges, List<string> commonCurrencies, string currency2)
+        {
+            List<TickerListItem> tickers = new List<TickerListItem>(exchanges.Count * commonCurrencies.Count);
+
+            foreach (string currency in commonCurrencies)
+            {
+                foreach (var exchange in exchanges)
+                {
+                    var tickerListItem = new TickerListItem()
+                    {
+                        Exchange = exchange.GetName(),
+                        currency1 = currency,
+                        currency2 = currency2,
+                        ticker = await exchange.GetTicker(currency, currency2)
+                    };
+
+                    tickers.Add(tickerListItem);
+
+                    Console.WriteLine($"{tickerListItem.Exchange} {currency}/{currency2} last {tickerListItem.ticker.last.ToString("F")} min {tickerListItem.ticker.min.ToString("F")} max {tickerListItem.ticker.max.ToString("F")} ask {tickerListItem.ticker.ask.ToString("F")} bid {tickerListItem.ticker.bid.ToString("F")}");
+                }
+                Console.WriteLine("------------------------------------------------------------------------------------------------------------");
+            }
+
+            var sortedByPrifit = CalculatePriceDifference(tickers);
+
+            foreach (var item in sortedByPrifit)
+                Console.WriteLine($"{item.Item1}/{item.Item2} {item.Item3} {string.Format("{0:0.###}", item.Item4)}% ==> {item.Item5.ToString("F")}$");
         }
 
         public static List<Tuple<string, string, string, decimal, decimal>> CalculatePriceDifference(List<TickerListItem> tickerList)
