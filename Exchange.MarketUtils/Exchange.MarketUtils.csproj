@@ -45,9 +45,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ask.cs" />
+    <Compile Include="Bid.cs" />
     <Compile Include="ExchangeConfig.cs" />
     <Compile Include="IOperationFeesCalculator.cs" />
+    <Compile Include="Offer.cs" />
     <Compile Include="OperationTypes.cs" />
+    <Compile Include="OrderBook.cs" />
     <Compile Include="Ticker.cs" />
     <Compile Include="Currencies.cs" />
     <Compile Include="IExchange.cs" />

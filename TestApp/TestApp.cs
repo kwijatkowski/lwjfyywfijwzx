@@ -27,7 +27,7 @@ namespace startup
             {
                 List<string> commonCurrencies = CommonCurrencies(new List<Dictionary<string, string>>() { Exchange.Kraken.CurrenciesNamesMap.MapCrypto, Exchange.BitBay.CurrenciesNamesMap.MapCrypto });
 
-                //string currency1 = Currencies.Bitcoin;
+                string currency1 = Currencies.Bitcoin;
                 string currency2 = Currencies.USD;
 
                 var bbConfig = new ExchangeConfig();
@@ -37,14 +37,53 @@ namespace startup
                 krakenConfig.Load(krakenConfigPath);
 
                 List<IExchange> exchanges = new List<IExchange>() {
+                    //new Poloniex("https://poloniex.com/public"),
                     new BitBay(bbConfig),
-                    new Kraken(krakenConfig),
-                    //new Poloniex("https://poloniex.com/public")
+                    new Kraken(krakenConfig)
             };
 
-                var poloniex = new Poloniex("https://poloniex.com/public");
+                Dictionary<string, decimal> averageFromOrderBooks = new Dictionary<string, decimal>();
+
+                //var bb = new BitBay(bbConfig);
+                //var pairs = bb.GetTradablePairs();
+                //
+                //var ticker = await new Kraken(krakenConfig).GetKrakenTicker(Currencies.Ethereum, Currencies.USD);
+                //ticker = await new Kraken(krakenConfig).GetKrakenTicker(Currencies.USD, Currencies.Ethereum);
+
+                foreach (var exchange in exchanges)
+                {
+                    try
+                    {
+                        var ticker = await exchange.GetTicker(currency1, currency2);
+                        //
+                        //var bidLimit = new decimal(0.7) * ticker.last;
+                        //var askLimit = new decimal(1.3) * ticker.last;
+
+                        //var orderbook = await exchange.GetOrderbook(currency1, currency2, bidLimit, askLimit, 15);
+
+                        //Console.WriteLine($"{ exchange.GetName()} ask avg: {orderbook.AskWeightAvg.ToString()}");
+                        //Console.WriteLine($"{ exchange.GetName()} bid avg: {orderbook.BidWeightAvg.ToString()}");
+
+                            Console.WriteLine(exchange.GetName());
+                        var tradable = exchange.GetTradablePairs();
+
+                        foreach(var pair in tradable)
+                        {
+                            Console.WriteLine($"{pair.Item1} {pair.Item2}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"{exchange.GetName()} {ex.Message}");
+                        continue;
+                    }
+                }
+
+                //GetTickersAndCalculatePriceDifferences(exchanges, commonCurrencies, currency2);
+
+                //var poloniex = new Poloniex("https://poloniex.com/public");
                 //var result = await poloniex.GetTicker("", currency2);
-                await poloniex.GetCurrenciesMap();
+                //await poloniex.GetCurrenciesMap();
 
                 //string.Format("{0:0.###}",
             }).GetAwaiter().GetResult();

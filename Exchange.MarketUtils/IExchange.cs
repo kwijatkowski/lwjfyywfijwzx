@@ -14,6 +14,8 @@ namespace Exchange.MarketUtils
         /// <returns>Name of exchange</returns>
         string GetName();
         Task<Ticker> GetTicker(string currency1, string currency2);
-        void GetOrderbook();
+        Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null);
+
+        List<Tuple<string, string>> GetTradablePairs();
     }
 }

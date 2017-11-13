@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.MarketUtils", "Exc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.Poloniex", "Exchange.Poloniex\Exchange.Poloniex.csproj", "{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.Bitfinex", "Exchange.Bitfinex\Exchange.Bitfinex.csproj", "{A1546083-07FB-452B-90FC-4F1D9DEEDB04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1546083-07FB-452B-90FC-4F1D9DEEDB04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1546083-07FB-452B-90FC-4F1D9DEEDB04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1546083-07FB-452B-90FC-4F1D9DEEDB04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1546083-07FB-452B-90FC-4F1D9DEEDB04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{2B8EA4A3-8222-40D4-9239-01A0AA9B7185} = {1ABFFF86-90AE-4262-9374-613417602574}
 		{8A4B69A0-43F9-4E55-BA5D-A7A7FC73513C} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
 		{84C9EDC8-F9CF-4C6B-80A3-B84983AB24B2} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
+		{A1546083-07FB-452B-90FC-4F1D9DEEDB04} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {22395B8D-7265-41E5-8AE7-00BF3BCED312}

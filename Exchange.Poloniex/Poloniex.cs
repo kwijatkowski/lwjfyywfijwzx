@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Exchange.Poloniex
 {
-    public class Poloniex
+    public class Poloniex : IExchange
     {
         private string _publicApiURL;
         private PublicApiConnector _publicApiConnector;
@@ -28,8 +28,8 @@ namespace Exchange.Poloniex
 
         public async Task<Ticker> GetTicker(string currency1, string currency2)
         {
-            string mapped1 = "";
-            string mapped2 = "";
+            string mapped1 = CurrenciesNamesMap.MapName(currency1);
+            string mapped2 = CurrenciesNamesMap.MapName(currency2);
 
             string response = await _publicApiConnector.GetTicker();
 
@@ -57,6 +57,11 @@ namespace Exchange.Poloniex
             }
         }
 
+        public async Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Dictionary<string,string>> GetCurrenciesMap()
         {
             var allCurrenciesInfo = await _publicApiConnector.GetCurrencies();
@@ -70,6 +75,11 @@ namespace Exchange.Poloniex
 
             var ser = JsonConvert.SerializeObject(map);
             return null;
+        }
+
+        public List<Tuple<string, string>> GetTradablePairs()
+        {
+            throw new NotImplementedException();
         }
     }
 }

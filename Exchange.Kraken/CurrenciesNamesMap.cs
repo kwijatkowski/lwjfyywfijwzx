@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using Exchange.MarketUtils;
+﻿using Exchange.MarketUtils;
+using System.Collections.Generic;
+using System;
 
 namespace Exchange.Kraken
 {
@@ -16,8 +17,8 @@ namespace Exchange.Kraken
                     {Currencies.Dash, "DASH"},
                     {Currencies.Dogecoin, "XDG"},
                     {Currencies.Eos, "EOS"},
-                    {Currencies.Ether, "ETH"},
-                    {Currencies.EtherClassic, "ETC"},
+                    {Currencies.Ethereum, "ETH"},
+                    {Currencies.EthereumClassic, "ETC"},
                     {Currencies.Gnosis, "GNO"},
                     {Currencies.Iconomi, "ICN"},
                     {Currencies.Litecoin, "LTC"},
@@ -45,6 +46,41 @@ namespace Exchange.Kraken
             }
         }
 
+        private static List<string> _assetsWithoutPrefix = new List<string>
+        {
+            Currencies.BitcoinCash, // "BCH",
+            Currencies.Dash, // "DASH",           
+            Currencies.Eos, // "EOS",
+            Currencies.Gnosis, // "GNO"
+        };
+
+        private static bool isFiat(string name)
+        {
+            return MapFiat.ContainsKey(name);
+        }
+
+        private static bool isCrypto(string name)
+        {
+            return MapCrypto.ContainsKey(name);
+        }
+
+        private static string GetPrefix(string mappedNoPrefix)
+        {
+            string fiatPrefix = "Z";
+            string cryptoPrefix = "X";
+
+            if (_assetsWithoutPrefix.Contains(mappedNoPrefix))
+                return string.Empty;
+            else
+            {
+                if (isCrypto(mappedNoPrefix))
+                    return cryptoPrefix;
+                else if (isFiat(mappedNoPrefix))
+                    return fiatPrefix;
+            }
+
+            throw new Exception($"invalid currency name {mappedNoPrefix}");
+        }
 
         //public static Dictionary<string, string> MapCrypto { get { return _mapCrypto; } }
         //public static Dictionary<string, string> MapFiat { get { return _mapFiat; } }
@@ -59,11 +95,17 @@ namespace Exchange.Kraken
             string symbol = string.Empty;
 
             if (MapCrypto.TryGetValue(name, out symbol))
-                return symbol;
+            {
+                //return symbol;
+            }
             else if (MapFiat.TryGetValue(name, out symbol))
-                return symbol;
+            {
+                //return symbol;
+            }
             else
                 throw new System.Exception($"Currency symbol not defined for name {name}");
+
+            return string.Concat(GetPrefix(name), symbol);
         }
 
         public static Dictionary<string, string> All()
@@ -71,10 +113,10 @@ namespace Exchange.Kraken
             var all = new Dictionary<string, string>();
 
             foreach (KeyValuePair<string, string> pair in MapCrypto)
-                all.Add(pair.Key, pair.Value);
+                all.Add(pair.Key, MapName(pair.Key));
 
             foreach (KeyValuePair<string, string> pair in MapFiat)
-                all.Add(pair.Key, pair.Value);
+                all.Add(pair.Key, MapName(pair.Key));
 
             return all;
         }

@@ -14,7 +14,7 @@ namespace Exchange.BitBay
                     {Currencies.Bitcoin, "BTC"},
                     {Currencies.Litecoin, "LTC"},
                     {Currencies.Lisk, "LSK"},
-                    {Currencies.Ether, "ETH"},
+                    {Currencies.Ethereum, "ETH"},
                     {Currencies.Dash, "DASH"},
                     {Currencies.Game, "GAME"},
                     {Currencies.BitcoinCash, "BCC"},
@@ -44,7 +44,7 @@ namespace Exchange.BitBay
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Kraken currency symbol</returns>
-        public static string MapName(string name)
+        public static string MapNameToSymbol(string name)
         {
             string symbol = string.Empty;
 
@@ -55,7 +55,7 @@ namespace Exchange.BitBay
             else
                 throw new System.Exception($"Currency symbol not defined for name {name}");
 
-        }
+        }        
 
         public static Dictionary<string,string> All()
         {
