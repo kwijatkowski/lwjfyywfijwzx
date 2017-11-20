@@ -1,6 +1,7 @@
 ﻿using Exchange.MarketUtils;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace Exchange.Kraken
 {
@@ -12,22 +13,23 @@ namespace Exchange.Kraken
             {
                 return new Dictionary<string, string>()
                 {
-                    {Currencies.Bitcoin, "XBT"},
-                    {Currencies.BitcoinCash, "BCH"},
-                    {Currencies.Dash, "DASH"},
-                    {Currencies.Dogecoin, "XDG"},
-                    {Currencies.Eos, "EOS"},
-                    {Currencies.Ethereum, "ETH"},
-                    {Currencies.EthereumClassic, "ETC"},
-                    {Currencies.Gnosis, "GNO"},
-                    {Currencies.Iconomi, "ICN"},
-                    {Currencies.Litecoin, "LTC"},
-                    {Currencies.Monero, "XMR"},
-                    {Currencies.Namecoin, "NMC"},
-                    {Currencies.Ripple, "XRP"},
-                    {Currencies.Stellar, "XLM"},
-                    {Currencies.Tether, "USDT"},
-                    {Currencies.Zcash, "ZEC"},
+                    {Currencies.Bitcoin, KrakenCurrencies.XBT},
+                    {Currencies.BitcoinCash, KrakenCurrencies.BCH},
+                    {Currencies.Dash, KrakenCurrencies.DASH},
+                    {Currencies.Dogecoin, KrakenCurrencies.XDG},
+                    {Currencies.Eos, KrakenCurrencies.EOS},
+                    {Currencies.Ethereum, KrakenCurrencies.ETH},
+                    {Currencies.EthereumClassic, KrakenCurrencies.ETC},
+                    {Currencies.Gnosis, KrakenCurrencies.GNO},
+                    {Currencies.Iconomi, KrakenCurrencies.ICN},
+                    {Currencies.Litecoin, KrakenCurrencies.LTC},
+                    {Currencies.Melon, KrakenCurrencies.MLN},
+                    {Currencies.Monero, KrakenCurrencies.XMR},
+                    {Currencies.Namecoin, KrakenCurrencies.NMC},
+                    {Currencies.Ripple, KrakenCurrencies.XRP},
+                    {Currencies.Stellar, KrakenCurrencies.XLM},
+                    {Currencies.Tether, KrakenCurrencies.USDT},
+                    {Currencies.Zcash, KrakenCurrencies.ZEC},
                 };
             }
         }
@@ -38,33 +40,34 @@ namespace Exchange.Kraken
             {
                 return new Dictionary<string, string>()
                 {
-                    {Currencies.CAD, "CAD"},
-                    {Currencies.EUR, "EUR" },
-                    {Currencies.JPY, "JPY"},
-                    {Currencies.USD, "USD" },
+                    {Currencies.CAD, KrakenCurrencies.CAD },
+                    {Currencies.EUR, KrakenCurrencies.EUR },
+                    {Currencies.JPY, KrakenCurrencies.JPY },
+                    {Currencies.USD, KrakenCurrencies.USD },
+                    {Currencies.GBP, KrakenCurrencies.GBP }
                 };
             }
         }
 
         private static List<string> _assetsWithoutPrefix = new List<string>
         {
-            Currencies.BitcoinCash, // "BCH",
-            Currencies.Dash, // "DASH",           
-            Currencies.Eos, // "EOS",
-            Currencies.Gnosis, // "GNO"
+            MapCrypto[Currencies.BitcoinCash], // KrakenCurrencies.BCH,
+            MapCrypto[Currencies.Dash], // KrakenCurrencies.DASH,           
+            MapCrypto[Currencies.Eos], // KrakenCurrencies.EOS,
+            MapCrypto[Currencies.Gnosis] // "GNO"
         };
 
-        private static bool isFiat(string name)
+        private static bool isFiat(string mappedNameNoPrefix)
         {
-            return MapFiat.ContainsKey(name);
+            return MapFiat.Any( i => i.Value == mappedNameNoPrefix);
         }
 
-        private static bool isCrypto(string name)
+        private static bool isCrypto(string mappedNameNoPrefix)
         {
-            return MapCrypto.ContainsKey(name);
+            return MapCrypto.Any(i => i.Value == mappedNameNoPrefix);
         }
 
-        private static string GetPrefix(string mappedNoPrefix)
+        internal static string GetPrefix(string mappedNoPrefix)
         {
             string fiatPrefix = "Z";
             string cryptoPrefix = "X";
@@ -90,7 +93,7 @@ namespace Exchange.Kraken
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Kraken currency symbol</returns>
-        public static string MapName(string name)
+        public static string MapNameToSymbol(string name)
         {
             string symbol = string.Empty;
 
@@ -105,7 +108,7 @@ namespace Exchange.Kraken
             else
                 throw new System.Exception($"Currency symbol not defined for name {name}");
 
-            return string.Concat(GetPrefix(name), symbol);
+            return string.Concat(GetPrefix(symbol), symbol);
         }
 
         public static Dictionary<string, string> All()
@@ -113,10 +116,10 @@ namespace Exchange.Kraken
             var all = new Dictionary<string, string>();
 
             foreach (KeyValuePair<string, string> pair in MapCrypto)
-                all.Add(pair.Key, MapName(pair.Key));
+                all.Add(pair.Key, MapNameToSymbol(pair.Key));
 
             foreach (KeyValuePair<string, string> pair in MapFiat)
-                all.Add(pair.Key, MapName(pair.Key));
+                all.Add(pair.Key, MapNameToSymbol(pair.Key));
 
             return all;
         }

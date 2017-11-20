@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Exchange.Poloniex
 {
-    public class Poloniex : IExchange
+    public class Poloniex //: IExchange
     {
         private string _publicApiURL;
         private PublicApiConnector _publicApiConnector;

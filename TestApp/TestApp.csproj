@@ -72,6 +72,10 @@
       <Project>{84c9edc8-f9cf-4c6b-80a3-b84983ab24b2}</Project>
       <Name>Exchange.Poloniex</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Strategy.Arbitrage\Strategy.Arbitrage.csproj">
+      <Project>{b33e3249-c390-4dae-97cd-727fc1cd3bb5}</Project>
+      <Name>Strategy.Arbitrage</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -64,7 +64,7 @@ namespace Exchange.BitBay
             return _publicApiConnector.GetTradablePairs().GetAwaiter().GetResult();
             //throw new NotImplementedException();
         }
-
+        
         private OrderBook bitBayOrderbookToOrderbook(string orderbookJson, decimal bidLimit, decimal askLimit, int? limit)
         {
            var bitBayOrderBook = JsonConvert.DeserializeObject<BitBayOrderBook>(orderbookJson);
@@ -82,6 +82,15 @@ namespace Exchange.BitBay
             orderBook.asks = orderBook.asks.Where(a => a.price < askLimit).ToList();
 
             return orderBook;
+        }
+
+        public bool IsValidPair(string currency1, string currency2)
+        {
+            string symbol1 = CurrenciesNamesMap.MapNameToSymbol(currency1);
+            string symbol2 = CurrenciesNamesMap.MapNameToSymbol(currency2);
+
+            List<Tuple<string,string>> tradablePairs = GetTradablePairs();
+            return tradablePairs.Any(pair => (pair.Item1 == symbol1 && pair.Item2 == symbol2) || (pair.Item1 == symbol2 && pair.Item2 == symbol1));
         }
     }
 }

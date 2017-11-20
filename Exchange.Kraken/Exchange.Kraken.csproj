@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KrakenCurrencies.cs" />
     <Compile Include="KrakenOrderBook.cs" />
     <Compile Include="CurrenciesNamesMap.cs" />
     <Compile Include="Kraken.cs" />

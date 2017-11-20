@@ -17,5 +17,7 @@ namespace Exchange.MarketUtils
         Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null);
 
         List<Tuple<string, string>> GetTradablePairs();
+
+        bool IsValidPair(string currency1, string currency2);
     }
 }

@@ -31,7 +31,7 @@ namespace Exchange.Kraken
 
         public async Task<Dictionary<string, KrakenTicker>> GetKrakenTicker(string currency1, string currency2)
         {
-            string pair = string.Concat(CurrenciesNamesMap.MapName(currency1), CurrenciesNamesMap.MapName(currency2));
+            string pair = string.Concat(CurrenciesNamesMap.MapNameToSymbol(currency1), CurrenciesNamesMap.MapNameToSymbol(currency2));
             string tickerJson = await _publicApiConnector.GetTicker(pair);
             JObject j = JObject.Parse(tickerJson);
             CheckErrorsAndThrow(j);
@@ -55,7 +55,7 @@ namespace Exchange.Kraken
 
         public async Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal lowLimit, decimal topLimit, int? limit = null)
         {
-            string pair = string.Concat(CurrenciesNamesMap.MapName(currency1), CurrenciesNamesMap.MapName(currency2));
+            string pair = string.Concat(CurrenciesNamesMap.MapNameToSymbol(currency1), CurrenciesNamesMap.MapNameToSymbol(currency2));
 
             var parameters = new Dictionary<string, string>();
             parameters.Add("pair", pair);
@@ -106,96 +106,128 @@ namespace Exchange.Kraken
 
         public List<Tuple<string, string>> GetTradablePairs()
         {
-            return new List<Tuple<string, string>>()
+            bool addPrefix = true;
+
+            List<Tuple<string,string>> tradablePairs = new List<Tuple<string, string>>()
             {
                 //Tradeable against ETH
-                new Tuple<string,string>("XBT","ETH"),
-                new Tuple<string,string>("CAD","ETH"),
-                new Tuple<string,string>("EUR","ETH"),
-                new Tuple<string,string>("GBP","ETH"),
-                new Tuple<string,string>("JPY","ETH"),
-                new Tuple<string,string>("USD","ETH"),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.ETH),
+                new Tuple<string,string>(KrakenCurrencies.CAD,KrakenCurrencies.ETH),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.ETH),
+                new Tuple<string,string>(KrakenCurrencies.GBP,KrakenCurrencies.ETH),
+                new Tuple<string,string>(KrakenCurrencies.JPY,KrakenCurrencies.ETH),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.ETH),
 
                 //Tradeable against LTC
-                new Tuple<string,string>("XBT","LTC"),
-                new Tuple<string,string>("EUR","LTC"),
-                new Tuple<string,string>("USD","LTC"),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.LTC),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.LTC),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.LTC),
 
                 //Tradeable against BCH
-                new Tuple<string,string>("USD","BCH"),
-                new Tuple<string,string>("EUR","BCH"),
-                new Tuple<string,string>("XBT","BCH"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.BCH),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.BCH),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.BCH),
 
                 //Tradeable against DASH
-                new Tuple<string,string>("USD","DASH"),
-                new Tuple<string,string>("EUR","DASH"),
-                new Tuple<string,string>("XBT","DASH"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.DASH),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.DASH),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.DASH),
 
                 //Tradeable against EOS
-                new Tuple<string,string>("USD","EOS"),
-                new Tuple<string,string>("EUR","EOS"),
-                new Tuple<string,string>("XBT","EOS"),
-                new Tuple<string,string>("ETH","EOS"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.EOS),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.EOS),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.EOS),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.EOS),
 
                 //Tradeable against ETC
-                new Tuple<string,string>("USD","ETC"),
-                new Tuple<string,string>("EUR","ETC"),
-                new Tuple<string,string>("XBT","ETC"),
-                new Tuple<string,string>("ETH","ETC"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.ETC),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.ETC),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.ETC),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.ETC),
 
                 //Tradeable against GNO
-                new Tuple<string,string>("USD","GNO"),
-                new Tuple<string,string>("EUR","GNO"),
-                new Tuple<string,string>("XBT","GNO"),
-                new Tuple<string,string>("ETH","GNO"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.GNO),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.GNO),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.GNO),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.GNO),
 
                 //Tradeable against ICN
-                new Tuple<string,string>("XBT","ICN"),
-                new Tuple<string,string>("ETH","ICN"),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.ICN),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.ICN),
 
                 //Tradeable against MLN
-                new Tuple<string,string>("XBT","MLN"),
-                new Tuple<string,string>("ETH","MLN"),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.MLN),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.MLN),
 
                 //Tradeable against REP
-                new Tuple<string,string>("USD","REP"),
-                new Tuple<string,string>("EUR","REP"),
-                new Tuple<string,string>("XBT","REP"),
-                new Tuple<string,string>("ETH","REP"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.REP),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.REP),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.REP),
+                new Tuple<string,string>(KrakenCurrencies.ETH,KrakenCurrencies.REP),
 
                 //Tradeable against XDG
-                new Tuple<string,string>("XBT","XDG"),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.XDG),
 
                 //Tradeable against XLM
-                new Tuple<string,string>("USD","XLM"),
-                new Tuple<string,string>("EUR","XLM"),
-                new Tuple<string,string>("XBT","XLM"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.XLM),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.XLM),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.XLM),
 
                 //Tradeable against XMR
-                new Tuple<string,string>("USD","XMR"),
-                new Tuple<string,string>("EUR","XMR"),
-                new Tuple<string,string>("XBT","XMR"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.XMR),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.XMR),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.XMR),
 
                 //Tradeable against XRP
-                new Tuple<string,string>("USD","XRP"),
-                new Tuple<string,string>("EUR","XRP"),
-                new Tuple<string,string>("XBT","XRP"),
-                new Tuple<string,string>("CAD","XRP"),
-                new Tuple<string,string>("JPY","XRP"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.XRP),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.XRP),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.XRP),
+                new Tuple<string,string>(KrakenCurrencies.CAD,KrakenCurrencies.XRP),
+                new Tuple<string,string>(KrakenCurrencies.JPY,KrakenCurrencies.XRP),
 
                 //Tradeable against ZEC
-                new Tuple<string,string>("USD","ZEC"),
-                new Tuple<string,string>("EUR","ZEC"),
-                new Tuple<string,string>("XBT","ZEC"),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.ZEC),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.ZEC),
+                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.ZEC),
 
                 //Tradeable against XBT
-                new Tuple<string,string>("BCH","XBT"),
-                new Tuple<string,string>("CAD","XBT"),
-                new Tuple<string,string>("EUR","XBT"),
-                new Tuple<string,string>("GBP","XBT"),
-                new Tuple<string,string>("JPY","XBT"),
-                new Tuple<string,string>("USD","XBT")
+                new Tuple<string,string>(KrakenCurrencies.BCH,KrakenCurrencies.XBT),
+                new Tuple<string,string>(KrakenCurrencies.CAD,KrakenCurrencies.XBT),
+                new Tuple<string,string>(KrakenCurrencies.EUR,KrakenCurrencies.XBT),
+                new Tuple<string,string>(KrakenCurrencies.GBP,KrakenCurrencies.XBT),
+                new Tuple<string,string>(KrakenCurrencies.JPY,KrakenCurrencies.XBT),
+                new Tuple<string,string>(KrakenCurrencies.USD,KrakenCurrencies.XBT)
         };
-    }
+
+            if (addPrefix)
+            {
+                var newList = new List<Tuple<string, string>>(tradablePairs.Count);
+
+                foreach(var pair in tradablePairs)
+                {
+                    newList.Add(
+                        new Tuple<string, string>(
+                            CurrenciesNamesMap.GetPrefix(pair.Item1) + pair.Item1,
+                            CurrenciesNamesMap.GetPrefix(pair.Item2) + pair.Item2
+                            )
+                            );
+                }
+
+                return newList;
 }
+            else
+            {
+                return tradablePairs;
+            }
+    }
+
+        public bool IsValidPair(string currency1, string currency2)
+        {
+            string symbol1 = CurrenciesNamesMap.MapNameToSymbol(currency1);
+            string symbol2 = CurrenciesNamesMap.MapNameToSymbol(currency2);
+
+            List<Tuple<string, string>> tradablePairs = GetTradablePairs();
+            return tradablePairs.Any(pair => (pair.Item1 == symbol1 && pair.Item2 == symbol2) || (pair.Item1 == symbol2 && pair.Item2 == symbol1));
+        }
+    }
 }

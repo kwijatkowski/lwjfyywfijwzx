@@ -180,6 +180,7 @@
         public static string MaxCoin { get { return "MaxCoin"; } }
         public static string MazaCoin { get { return "MazaCoin"; } }
         public static string Megacoin { get { return "Megacoin"; } }
+        public static string Melon { get { return "Melon"; } }
         public static string MemoryCoin { get { return "MemoryCoin"; } }
         public static string Metiscoin { get { return "Metiscoin"; } }
         public static string microCoin { get { return "microCoin"; } }
@@ -309,5 +310,6 @@
         public static string JPY { get { return "JPY"; } }
         public static string PLN { get { return "PLN"; } }
         public static string USD { get { return "USD"; } }
+        public static string GBP { get { return "GBP"; } }
     }
 }

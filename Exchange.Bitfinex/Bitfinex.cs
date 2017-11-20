@@ -11,7 +11,7 @@ namespace Exchange.Bitfinex
         private string _publicApiURL;
         private string _privateApiURL;
 
-        private PublicApiConnector _publicApiConnector;
+       // private PublicApiConnector _publicApiConnector;
         //private PrivateApiConnector publicApiConnector;
 
         public Bitfinex(string publicApiAddress, string privateApiAddress)
@@ -19,7 +19,7 @@ namespace Exchange.Bitfinex
             _publicApiURL = publicApiAddress;
             _privateApiURL = privateApiAddress;
 
-            _publicApiConnector = new PublicApiConnector(_publicApiURL);
+          //  _publicApiConnector = new PublicApiConnector(_publicApiURL);
         }
 
         public string GetName()
