@@ -31,12 +31,12 @@ namespace Exchange.BitBay
             _baseAddress = baseAddress;
         }
 
-        public async Task<List<Tuple<string,string>>> GetTradablePairs()
+        public async Task<List<string>> GetTradablePairs()
         {
             string address = "https://api.bitbay.net/rest/trading/ticker";
             string response = await GetDataFromAddress<string>(null, address);
 
-            List<Tuple<string, string>> tradablePairs = new List<Tuple<string, string>>();
+            List<string> tradablePairs = new List<string>();
 
             JObject j = JObject.Parse(response);
             var resultJson = j.SelectToken("items").ToString();
@@ -47,7 +47,7 @@ namespace Exchange.BitBay
             {
                 string first = pair.Split('-')[0];
                 string second = pair.Split('-')[1];
-                tradablePairs.Add(new Tuple<string, string>(first, second));
+                tradablePairs.Add(string.Concat(first, second));
             }
 
             return tradablePairs;
@@ -59,9 +59,10 @@ namespace Exchange.BitBay
             return await GetDataFromAddress<string>(relativeAddress);
         }
 
-        public async Task<string> GetOrderbook(string currency1, string currency2)
-        {
-            string relativeAddress = string.Concat(currency1, currency2, "/", orderbook, jsonExtension);
+        public async Task<string> GetOrderbook(string pair)
+        {            
+            //string relativeAddress = string.Concat(currency1, currency2, "/", orderbook, jsonExtension);
+            string relativeAddress = string.Concat(pair, "/", orderbook, jsonExtension);
             return await GetDataFromAddress<string>(relativeAddress);
         }
 
@@ -71,9 +72,9 @@ namespace Exchange.BitBay
             return await GetDataFromAddress<string>(relativeAddress);
         }
 
-        public async Task<string> GetTicker(string currency1, string currency2)
+        public async Task<string> GetTicker(string pair)
         {
-            string relativeAddress = string.Concat(currency1, currency2, "/", ticker, jsonExtension);
+            string relativeAddress = string.Concat(pair, "/", ticker, jsonExtension);
             return await GetDataFromAddress<string>(relativeAddress);
         }
 

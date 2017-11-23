@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using Exchange.MarketUtils;
+using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
-using Exchange.MarketUtils;
 
 namespace Exchange.BitBay
 {
@@ -14,10 +14,12 @@ namespace Exchange.BitBay
         //public enum OPERATION_TYPE { maker, taker };
 
         private BitbayFees _fees;
+        private decimal _accountMonthlyVolume;
 
-        public OperationCostCalculator(string feesJson)
+        public OperationCostCalculator(string feesJson, decimal accountMonthlyVolume)
         {
             _fees = JsonConvert.DeserializeObject<BitbayFees>(feesJson);
+            _accountMonthlyVolume = accountMonthlyVolume;
         }
 
         /// <summary>
@@ -29,12 +31,10 @@ namespace Exchange.BitBay
         public decimal CalculateTransferCost(string currency, OperationTypes.TRANSFER_DIR direction, decimal transferAmount = -1)
         {
             //find correct fee
-            var fees = _fees.transfer.Where(f => f.currency == currency);
+            var fee = _fees.transfer.SingleOrDefault(f => f.currency == currency);
 
-            if (fees == null || fees.Count() != 1)
+            if (fee == null)
                 throw new InvalidDataException($"Unable to find transfer fee");
-
-            var fee = fees.First();
 
             return CalculateTransferFee(fee, direction, transferAmount);
         }
@@ -67,18 +67,18 @@ namespace Exchange.BitBay
         /// </summary>
         /// <param name="operationType"></param>
         /// <param name="volume">In this case it is monthly volume EUR</param>
-        /// <returns>Fee %. To calculate final one take your operaiton volume and multiply by returned fee</returns>
-        public decimal CalculateTransactionFee(string currencyPair, OperationTypes.OPERATION_TYPE operationType, decimal volume)
+        /// <returns>Fee in currency. To calculate final one take your operaiton volume and multiply by returned fee</returns>
+        public decimal CalculateTransactionFee(string currencyPair, OperationTypes.OPERATION_TYPE operationType)
         {
             TransactionFee fee;
 
-            if (volume <= 0) //take highest possible
+            if (_accountMonthlyVolume <= 0) //take highest possible
                 fee = _fees.transaction.OrderBy(f => f.treshold).First();
             else
-                fee = _fees.transaction.Where(f => f.treshold > volume).OrderBy(f => f.treshold).First();
+                fee = _fees.transaction.Where(f => f.treshold > _accountMonthlyVolume).OrderBy(f => f.treshold).First();
 
             if (fee == null)
-                throw new InvalidDataException($"Fee not defined for operation type {operationType.ToString()} monthly volume {volume.ToString()}");
+                throw new InvalidDataException($"Fee not defined for operation type {operationType.ToString()} monthly volume {_accountMonthlyVolume.ToString()}");
 
             if (operationType == OperationTypes.OPERATION_TYPE.maker)
                 return fee.maker;

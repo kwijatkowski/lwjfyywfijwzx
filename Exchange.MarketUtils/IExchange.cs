@@ -16,8 +16,24 @@ namespace Exchange.MarketUtils
         Task<Ticker> GetTicker(string currency1, string currency2);
         Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null);
 
-        List<Tuple<string, string>> GetTradablePairs();
+        List<string> GetTradablePairs();
 
-        bool IsValidPair(string currency1, string currency2);
+        /// <summary>
+        /// Returning pair in correct order if it is acceptable by exchange. If not null
+        /// </summary>
+        /// <param name="currency1"></param>
+        /// <param name="currency2"></param>
+        /// <returns></returns>
+        Tuple<string,string> MakeValidPair(string currency1, string currency2);
+
+        decimal CalculateTransacionFee(string startCurrency, string targetCurrency);
+
+        /// <summary>
+        /// Calculating withdrawal fee from exchange
+        /// </summary>
+        /// <param name="currency">Currency to be withdrawn</param>
+        /// <param name="volume">Volume if applicable</param>
+        /// <returns></returns>
+        decimal CalculateTransferFee(string currency, decimal volume = 0);
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Exchange.Kraken
+﻿namespace Exchange.Kraken
 {
     internal class KrakenCurrencies
     {
@@ -29,6 +23,7 @@ namespace Exchange.Kraken
 
         //fiat
         public const string EUR = "EUR";
+
         public const string GBP = "GBP";
         public const string USD = "USD";
         public const string JPY = "JPY";

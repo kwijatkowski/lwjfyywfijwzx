@@ -34,7 +34,10 @@ namespace Exchange.MarketUtils
                 sumWi += o.volume;
             }
 
-            return sumWiXi / sumWi;
+            if (sumWiXi == 0)
+                return 0;
+            else
+                return sumWiXi / sumWi;
         }
 
 }

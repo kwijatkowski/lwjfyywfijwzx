@@ -55,7 +55,12 @@ namespace Exchange.BitBay
             else
                 throw new System.Exception($"Currency symbol not defined for name {name}");
 
-        }        
+        } 
+        
+        public static string MapNamesToPair(string currency1, string currency2)
+        {
+            return $"{MapNameToSymbol(currency1)}{MapNameToSymbol(currency2)}";
+        }
 
         public static Dictionary<string,string> All()
         {

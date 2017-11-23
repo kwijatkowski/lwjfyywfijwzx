@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitBay.cs" />
+    <Compile Include="BitbayErrorResponse.cs" />
     <Compile Include="BitbayFees.cs" />
     <Compile Include="BitBayOrderBook.cs" />
     <Compile Include="BitBayTicker.cs" />

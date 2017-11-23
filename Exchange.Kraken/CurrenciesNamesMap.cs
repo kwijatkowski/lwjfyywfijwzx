@@ -13,6 +13,7 @@ namespace Exchange.Kraken
             {
                 return new Dictionary<string, string>()
                 {
+                    {Currencies.Augur, KrakenCurrencies.REP },
                     {Currencies.Bitcoin, KrakenCurrencies.XBT},
                     {Currencies.BitcoinCash, KrakenCurrencies.BCH},
                     {Currencies.Dash, KrakenCurrencies.DASH},
@@ -85,15 +86,12 @@ namespace Exchange.Kraken
             throw new Exception($"invalid currency name {mappedNoPrefix}");
         }
 
-        //public static Dictionary<string, string> MapCrypto { get { return _mapCrypto; } }
-        //public static Dictionary<string, string> MapFiat { get { return _mapFiat; } }
-
         /// <summary>
         ///
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Kraken currency symbol</returns>
-        public static string MapNameToSymbol(string name)
+        internal static string MapNameToSymbol(string name)
         {
             string symbol = string.Empty;
 
@@ -108,7 +106,30 @@ namespace Exchange.Kraken
             else
                 throw new System.Exception($"Currency symbol not defined for name {name}");
 
-            return string.Concat(GetPrefix(symbol), symbol);
+            //return string.Concat(GetPrefix(symbol), symbol);
+            return symbol;
+        }
+
+        public static string MapNamesToPair(string name1, string name2)
+        {
+            string symbol1 = MapNameToSymbol(name1);
+            string symbol2 = MapNameToSymbol(name2);
+
+            return MapSymbolsToPair(symbol1, symbol2);
+        }
+
+        internal static string MapSymbolsToPair(string symbol1, string symbol2)
+        {
+            if (_assetsWithoutPrefix.Contains(symbol1)) //if first does not have prefix, second should not have it as well
+            {
+                return string.Concat(symbol1, symbol2);
+            }
+            else
+            {
+                return string.Concat(
+                    GetPrefix(symbol1) + symbol1, GetPrefix(symbol2) + symbol2
+                    );
+            }
         }
 
         public static Dictionary<string, string> All()
