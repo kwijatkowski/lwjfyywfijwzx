@@ -19,8 +19,10 @@ namespace startup
         //public static string publicApiAddress { get { return "https://api.kraken.com/0/public/"; } }
         //public static string privateApiAddress = string.Empty;//{ get { return "https://api.kraken.com/0/public/"; } }
 
-        public static string bitbayConfigPath = @"C:\Projects\Priv\Bot\BitBay.exconf";
-        public static string krakenConfigPath = @"C:\Projects\Priv\Bot\Kraken.exconf";
+        public static string configDirPath = @"F:\BestTraderInTheWorld\";
+
+        public static string bitbayConfigPath = configDirPath + "BitBay.exconf";
+        public static string krakenConfigPath = configDirPath + "Kraken.exconf";
 
         private static void Main(string[] args)
         {
@@ -30,16 +32,15 @@ namespace startup
 
                 List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
                 {
-                    new Tuple<string, string>(Currencies.Ethereum    , Currencies.Bitcoin   ),
-                    new Tuple<string, string>(Currencies.Litecoin    , Currencies.Bitcoin   ),
-                    new Tuple<string, string>(Currencies.BitcoinCash , Currencies.Bitcoin   ),
-                    new Tuple<string, string>(Currencies.USD , Currencies.Bitcoin   ),
+                    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum   ),
+                    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin   ),
+                    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash ),
+
+                    //new Tuple<string, string>(Currencies.USD , Currencies.Bitcoin   ),
                     //new Tuple<string, string>(Currencies.PLN , Currencies.Bitcoin   )
                 };
 
-                decimal startCurrencyVolume = 1000;
-                string startCurrency = Currencies.Ethereum;
-                string transferCurrency = Currencies.Bitcoin;
+                decimal startCurrencyVolume = new decimal(0.04);
 
                 var bbConfig = new ExchangeConfig();
                 bbConfig.Load(bitbayConfigPath);
@@ -47,7 +48,7 @@ namespace startup
                 var krakenConfig = new ExchangeConfig();
                 krakenConfig.Load(krakenConfigPath);
 
-                string feesJsonPath = @"C:\Projects\Priv\Bot\Exchange.BitBay\fees.json";
+                string feesJsonPath = @"F:\BestTraderInTheWorld\Exchange.BitBay\fees.json";
                 var bitbay = new BitBay(bbConfig, 0, File.ReadAllText(feesJsonPath));
                 var kraken = new Kraken(krakenConfig, 0);
 
@@ -61,7 +62,7 @@ namespace startup
                 foreach (var pair in tradingPairs)
                 {
                     Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, kraken, startCurrencyVolume);
-                    Console.WriteLine($"{bitbay.GetName()} -> {kraken.GetName()} pair {pair.Item1} {pair.Item2} profit: {profit.absoluteValue} [{profit.currency}] or {profit.percent.ToString("F")}%");
+                    Console.WriteLine($"{bitbay.GetName()} -> {kraken.GetName()} pair {pair.Item1} {pair.Item2} profit: {profit.absoluteValue} [{profit.currency}] or {profit.percent.ToString()}%");
                 }
             }).GetAwaiter().GetResult();
 

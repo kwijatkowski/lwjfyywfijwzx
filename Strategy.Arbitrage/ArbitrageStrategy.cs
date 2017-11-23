@@ -64,9 +64,8 @@ namespace Strategy.Arbitrage
                 decimal tsf1 = startExchange.CalculateTransacionFee(startEndCurrency, tmpCurrency);
                 tmpVolume *= (1-tsf1); //volume after fee
 
-                !!!
                 //recalculate to tmpCurrency
-                tmpVolume = tmpVolume * startOrderbook.BidWeightAvg; //todo: invert if pairs defined opposite way
+                tmpVolume = tmpVolume * startOrderbook.BidWeightAvg(startEndCurrency, tmpCurrency) ; //todo: invert if pairs defined opposite way
 
                 //transfer fee
                 decimal trf1 = startExchange.CalculateTransferFee(tmpCurrency, tmpVolume);
@@ -78,14 +77,13 @@ namespace Strategy.Arbitrage
                 decimal tsf2 = targetExchange.CalculateTransacionFee(startEndCurrency, tmpCurrency);
                 tmpVolume *= (1 - tsf2); //volume after fee
 
-                !!!
                 //recalculate to startTargetCurrency
-                tmpVolume = tmpVolume * targetOrderbook.AskWeightAvg; //todo: invert if pairs defined opposite way
+                tmpVolume = tmpVolume * targetOrderbook.AskWeightAvg(tmpCurrency,startEndCurrency); //todo: invert if pairs defined opposite way
 
                 //todo: take fees into account
                 Profit profit = new Profit()
                 {
-                    percent = tmpVolume / startEndCurrencyVolume,
+                    percent = (tmpVolume - startEndCurrencyVolume) / startEndCurrencyVolume * 100,
                     absoluteValue = tmpVolume - startEndCurrencyVolume,
                     currency = startEndCurrency
                 };

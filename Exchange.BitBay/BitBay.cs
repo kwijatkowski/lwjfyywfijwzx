@@ -69,9 +69,9 @@ namespace Exchange.BitBay
                 throw new Exception($"Bitbay api error code: {jo["code"].ToString()} message: {jo["message"].ToString()} {addData}");
         }
 
-        public async Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null)
+        public async Task<OrderBook> GetOrderbook(string c1, string c2, decimal bidLimit, decimal askLimit, int? countLimit = null)
         {
-            var orderedPair = MakeValidPair(currency1, currency2);
+            var orderedPair = MakeValidPair(c1, c2);
 
             if (orderedPair == null)
                 return null;
@@ -86,9 +86,9 @@ namespace Exchange.BitBay
                  //CurrenciesNamesMap.MapNameToSymbol(currency2)
                  );
 
-            CheckResponseAndThrow(resultJson, $" market: {currency1} {currency2}");
+            CheckResponseAndThrow(resultJson, $" market: {c1} {c2}");
 
-            return bitBayOrderbookToOrderbook(resultJson, bidLimit, askLimit, countLimit);
+            return bitBayOrderbookToOrderbook(c1, c2, resultJson, bidLimit, askLimit, countLimit);
         }
 
         public List<string> GetTradablePairs()
@@ -127,11 +127,11 @@ namespace Exchange.BitBay
                 return null;
         }
 
-        private OrderBook bitBayOrderbookToOrderbook(string orderbookJson, decimal bidLimit, decimal askLimit, int? limit)
+        private OrderBook bitBayOrderbookToOrderbook(string c1, string c2, string orderbookJson, decimal bidLimit, decimal askLimit, int? limit)
         {
             var bitBayOrderBook = JsonConvert.DeserializeObject<BitBayOrderBook>(orderbookJson);
 
-            var orderBook = new OrderBook();
+            var orderBook = new OrderBook(c1, c2);
 
             for (int i = 0; i < Math.Min(bitBayOrderBook.bids.GetLength(0), (limit == null ? int.MaxValue : (int)limit)); i++)
                 orderBook.bids.Add(new Bid() { price = bitBayOrderBook.bids[i, 0], volume = bitBayOrderBook.bids[i, 1] });

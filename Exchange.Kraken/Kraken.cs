@@ -82,13 +82,13 @@ namespace Exchange.Kraken
 
             var resultJson = j.SelectToken("result").ToString();
 
-            return KrakenOrderBookToOrderBook(resultJson, lowLimit, topLimit);
+            return KrakenOrderBookToOrderBook(orderedPair.Item1, orderedPair.Item2, resultJson, lowLimit, topLimit);
         }
 
-        private OrderBook KrakenOrderBookToOrderBook(string json, decimal bidLimit, decimal askLimit)
+        private OrderBook KrakenOrderBookToOrderBook(string c1, string c2, string json, decimal bidLimit, decimal askLimit)
         {
             var krakenOrderBook = JsonConvert.DeserializeObject<Dictionary<string, KrakenOrderBook>>(json).Values.First();
-            var orderBook = new OrderBook();
+            var orderBook = new OrderBook(c1, c2);
 
             for (int i = 0; i < krakenOrderBook.asks.GetLength(0); i++)
                 orderBook.asks.Add(new Ask() { price = krakenOrderBook.asks[i, 0], volume = krakenOrderBook.asks[i, 0] });

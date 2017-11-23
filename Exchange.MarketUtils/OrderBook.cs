@@ -1,27 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Exchange.MarketUtils
 {
     public class OrderBook
     {
-        public OrderBook()
+        private string _currency1;
+        private string _currency2;
+
+        public string currency1 {  get { return _currency1; } }
+        public string currency2 { get { return _currency2; } }
+
+        public List<Ask> asks;
+        public List<Bid> bids;
+
+
+        /// <summary>
+        /// OrderBook constructor
+        /// </summary>
+        /// <param name="c1">Plain currency name</param>
+        /// <param name="c2">Plain currency name</param>
+        public OrderBook(string c1, string c2)
         {
+            if (string.IsNullOrWhiteSpace(c1) || string.IsNullOrWhiteSpace(c2))
+                throw new Exception("Please define names for currencies");
+
+            _currency1 = c1;
+            _currency2 = c2;
             asks = new List<Ask>();
             bids = new List<Bid>();
         }
 
-        string currency1;
-        string currency2;
+        public decimal AskWeightAvg(string currency1, string currency2)
+        {
+            if (!IsPairReversed(currency1, currency2))
+                return CalcWeightAverage(asks);
+            else
+                return 1 / CalcWeightAverage(asks);
+        }
 
-        public decimal AskWeightAvg {  get { return CalcWeightAverage(asks); } }
-        public decimal BidWeightAvg { get { return CalcWeightAverage(bids); } }
+        public decimal BidWeightAvg(string currency1, string currency2)
+        {
+            if (!IsPairReversed(currency1, currency2))
+                return CalcWeightAverage(bids);
+            else
+                return 1 / CalcWeightAverage(bids);
+        }
 
-        public List<Ask> asks;
-        public List<Bid> bids;
+        private bool IsPairReversed(string currency1, string currency2)
+        {
+            if (string.IsNullOrWhiteSpace(_currency1) || string.IsNullOrWhiteSpace(_currency2))
+                throw new Exception("Define currency pair for orderbook first");
+
+            if (_currency1 == currency1 && _currency2 == currency2)
+                return false;
+            else if (_currency1 == currency2 && _currency2 == currency1)
+                return true;
+            else
+                throw new Exception($"Orderbook was defined for pair {_currency1}/{_currency2} not {currency1} {currency2}");
+        }
 
         private static decimal CalcWeightAverage(IEnumerable<Offer> offers)
         {
@@ -40,5 +77,15 @@ namespace Exchange.MarketUtils
                 return sumWiXi / sumWi;
         }
 
-}
+        public static OrderBook Invert(OrderBook ob)
+        {
+            OrderBook inverted = new OrderBook(ob.currency1, ob.currency2);
+
+            foreach (var bid in ob.bids)
+                inverted.bids.Add(new Bid() { price = 1 / bid.price, timestamp = bid.timestamp, volume = 1 / bid.volume });11111111
+
+            foreach (var ask in ob.asks)
+                inverted.asks.Add(new Ask() { price = 1 / ask.price, timestamp = ask.timestamp, volume = 1 / ask.volume });
+        }
+    }
 }

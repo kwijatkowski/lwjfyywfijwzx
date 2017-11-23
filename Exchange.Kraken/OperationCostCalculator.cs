@@ -118,7 +118,7 @@ namespace Exchange.Kraken
                 throw new InvalidDataException("Volume must be larger than 0");
 
             if (!_fees.TryGetValue(currencyPair, out singleCurrencyFees))
-                throw new InvalidDataException($"Fees for pair {currencyPair} and operation {operationType.ToString()} not found");
+                throw new InvalidDataException($"Transaction fees for pair {currencyPair} and operation {operationType.ToString()} not found");
             else
             {
                 decimal[,] fees = null;
