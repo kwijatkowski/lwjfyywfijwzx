@@ -44,88 +44,18 @@ namespace Exchange.Poloniex
             return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
         }
 
-        //public async Task<string> GetServerTime()
-        //{
-        //    string reativaAddress = "Time";
-        //    return await GetDataFromAddress<string>(reativaAddress);
-        //}
+        //https://poloniex.com/public?command=return24hVolume
+        public async Task<string> Get24hVolume()
+        {
+            string relative = string.Empty;
+            Dictionary<string, string> parameters = new Dictionary<string, string>()
+            {
+                { "command", "return24hVolume"}
+            };
 
-        //public async Task<string> GetFees()
-        //{
-        //    string method = "AssetPairs";
-        //    Dictionary<string, string> parameters =
-        //        new Dictionary<string, string>() {
-        //        { "info","fees" }
-        //        };
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
 
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        //public async Task<string> GetAssets(Dictionary<string, string> parameters = null)
-        //{
-        //    string method = "Assets";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        //public async Task<string> GetAssetPairs(Dictionary<string, string> parameters = null)
-        //{
-        //    string method = "AssetPairs";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        ///// <summary>
-        ///// Obtains array of pair names and their ticker info
-        ///// </summary>
-        ///// <param name="pair">pair = comma delimited list of asset pairs to get info on</param>
-        ///// <returns></returns>
-        //public async Task<string> GetTicker(string pair)
-        //{
-        //    //BCHEUR pair
-        //    string method = "Ticker";
-
-        //    Dictionary<string, string> parameters =
-        //        new Dictionary<string, string>() {
-        //        { "pair", pair }
-        //        };
-
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        //public async Task<string> GetOHLCdata(Dictionary<string, string> parameters)
-        //{
-        //    //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
-        //    //BCHEUR pair
-
-        //    string method = "OHLC";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        ////todo: pass count param
-        //public async Task<string> GetOrderBook(Dictionary<string, string> parameters)
-        //{
-        //    //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
-        //    //BCHEUR pair
-        //    string method = "Depth";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        ////todo: pass since param to get less data
-        //public async Task<string> GetRecentTrades(Dictionary<string, string> parameters)
-        //{
-        //    //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
-        //    //BCHEUR pair
-        //    string method = "Trades";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
-
-        ////todo: pass since param
-        //public async Task<string> GetRecentSpreadData(Dictionary<string, string> parameters)
-        //{
-        //    //https://api.kraken.com/0/public/OHLC?pair=BCHUSD&interval=5
-        //    //BCHEUR pair
-        //    string method = "Spread";
-        //    return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, method, parameters));
-        //}
+        }
 
         //  HELP
 

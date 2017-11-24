@@ -23,9 +23,9 @@ namespace Exchange.KrakenTests
         [TestCase("DASHEUR", OperationTypes.OPERATION_TYPE.maker, 0, ExpectedResult = 0.0016)]
         public decimal TransactionFees(string currencyPair, OperationTypes.OPERATION_TYPE operationType, decimal volume)
         {
-            OperationCostCalculator calc = new OperationCostCalculator(apiAddress);
+            OperationCostCalculator calc = new OperationCostCalculator(apiAddress, volume);
 
-            decimal result = calc.CalculateTransactionFee(currencyPair, operationType, volume);
+            decimal result = calc.CalculateTransactionFee(currencyPair, operationType);
             return result;
 
         }

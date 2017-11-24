@@ -20,22 +20,23 @@ namespace Exchange.Kraken
         {
             _accountMonthlyVolume = accountMonthlyVolume;
             PublicApiConnector publicApiConnector = new PublicApiConnector(krakenPublicAPIaddress);
-            string json = publicApiConnector.GetFees().Result;
-            JObject j = JObject.Parse(json);
-
-            JArray errors = (JArray)j["error"];
-            if (errors.Count > 0)
-            {
-                string errMsg = string.Empty;
-
-                foreach (var error in errors)
-                    errMsg += error + Environment.NewLine;
-
-                throw new System.Exception(errMsg);
-            }
 
             if (_fees == null) //should not change during runtime
             {
+                string json = publicApiConnector.GetFees().Result;
+                JObject j = JObject.Parse(json);
+
+                JArray errors = (JArray)j["error"];
+                if (errors.Count > 0)
+                {
+                    string errMsg = string.Empty;
+
+                    foreach (var error in errors)
+                        errMsg += error + Environment.NewLine;
+
+                    throw new System.Exception(errMsg);
+                }
+
                 string feesString = j.SelectToken("result").ToString();
                 _fees = JsonConvert.DeserializeObject<Dictionary<string, SingleCurrencyFees>>(feesString);
             }

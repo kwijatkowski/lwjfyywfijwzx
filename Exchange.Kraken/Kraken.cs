@@ -42,7 +42,8 @@ namespace Exchange.Kraken
 
         public async Task<Ticker> GetTicker(string currency1, string currency2)
         {
-            var orderedPair = MakeValidPair(currency1, currency2);
+            bool inverted = false;
+            var orderedPair = MakeValidPair(currency1, currency2, out inverted);
 
             if (orderedPair == null)
                 return null;
@@ -57,12 +58,17 @@ namespace Exchange.Kraken
                 bid = ct.b[0],
                 last = ct.c[0]
             };
-            return t;
+
+            if (inverted)
+                return t.Invert(t);
+            else
+                return t;
         }
 
-        public async Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal lowLimit, decimal topLimit, int? limit = null)
+        public async Task<OrderBook> GetOrderbook(string currency1, string currency2, int? limit = null)
         {
-            var orderedPair = MakeValidPair(currency1, currency2);
+            bool inverted = false;
+            var orderedPair = MakeValidPair(currency1, currency2, out inverted);
 
             if (orderedPair == null)
                 return null;
@@ -82,10 +88,15 @@ namespace Exchange.Kraken
 
             var resultJson = j.SelectToken("result").ToString();
 
-            return KrakenOrderBookToOrderBook(orderedPair.Item1, orderedPair.Item2, resultJson, lowLimit, topLimit);
+            OrderBook ob =  KrakenOrderBookToOrderBook(orderedPair.Item1, orderedPair.Item2, resultJson);
+
+            if (inverted)
+                return ob.Invert(ob);
+            else
+                return ob;
         }
 
-        private OrderBook KrakenOrderBookToOrderBook(string c1, string c2, string json, decimal bidLimit, decimal askLimit)
+        private OrderBook KrakenOrderBookToOrderBook(string c1, string c2, string json)
         {
             var krakenOrderBook = JsonConvert.DeserializeObject<Dictionary<string, KrakenOrderBook>>(json).Values.First();
             var orderBook = new OrderBook(c1, c2);
@@ -96,16 +107,14 @@ namespace Exchange.Kraken
             for (int i = 0; i < krakenOrderBook.bids.GetLength(0); i++)
                 orderBook.bids.Add(new Bid() { price = krakenOrderBook.bids[i, 0], volume = krakenOrderBook.bids[i, 0] });
 
-            //filter outliers
-            orderBook.bids = orderBook.bids.Where(b => b.price > bidLimit).ToList();
-            orderBook.asks = orderBook.asks.Where(a => a.price < askLimit).ToList();
-
             return orderBook;
         }
 
         public decimal CalculateTransacionFee(string currency1, string currency2)
         {
-            string pair = CurrenciesNamesMap.MapNamesToPair(currency1, currency2);
+            bool inverted = false;
+            var orderedPair = MakeValidPair(currency1, currency2, out  inverted);
+            string pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
 
             OperationCostCalculator calc = new OperationCostCalculator(_publicApiURL, _accountMonthlyVolume);
             //todo: implement logic to select fee type
@@ -118,8 +127,10 @@ namespace Exchange.Kraken
             return calc.CalculateTransferCost(transferCurrency, OperationTypes.TRANSFER_DIR.outgoing);
         }
 
-        public List<string> GetTradablePairs()
+        private List<string> GetTradablePairs()
         {
+            #region tradablePairs
+
             List<Tuple<string, string>> tradablePairs = new List<Tuple<string, string>>()
             {
                 //Tradeable against ETH
@@ -204,7 +215,7 @@ namespace Exchange.Kraken
                 new Tuple<string,string>(KrakenCurrencies.ZEC,KrakenCurrencies.XBT),
 
                 //Tradeable against XBT
-                new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.BCH),
+                //new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.BCH),
                 new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.CAD),
                 new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.EUR),
                 new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.GBP),
@@ -212,30 +223,37 @@ namespace Exchange.Kraken
                 new Tuple<string,string>(KrakenCurrencies.XBT,KrakenCurrencies.USD)
         };
 
+            #endregion
+
             var newList = new List<string>(tradablePairs.Count);
 
             foreach (var pair in tradablePairs)
-            {
-                newList.Add(
-                    CurrenciesNamesMap.MapSymbolsToPair(pair.Item1, pair.Item2)
-                        );
-            }
+                newList.Add(CurrenciesNamesMap.MapSymbolsToPair(pair.Item1, pair.Item2));            
 
             return newList;
         }
 
-        public Tuple<string,string> MakeValidPair(string currency1, string currency2)
+        public Tuple<string,string> MakeValidPair(string currency1, string currency2, out bool inverted)
         {
             string pair1 = CurrenciesNamesMap.MapNamesToPair(currency1, currency2);
             string pair2 = CurrenciesNamesMap.MapNamesToPair(currency2, currency1);
 
             List<string> tradablePairs = GetTradablePairs();
             if (tradablePairs.Any(i => i == pair1))
+            {
+                inverted = false;
                 return new Tuple<string, string>(currency1, currency2);
+            }
             else if (tradablePairs.Any(i => i == pair2))
+            {
+                inverted = true;
                 return new Tuple<string, string>(currency2, currency1);
+            }
             else
+            {
+                inverted = false;
                 return null;
+            }
         }
 
         private void CheckResponseAndThrow(JObject response, string addData = "")

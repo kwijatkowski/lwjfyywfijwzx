@@ -8,7 +8,7 @@ namespace Strategy.Arbitrage
 {
     public class ArbitrageStrategy
     {
-        private int? _orderbookCountLimit = 10;
+        private int _orderbookCountLimit;
         private decimal _maxOrderbookPriceDeviation;
 
         /// <summary>
@@ -18,7 +18,11 @@ namespace Strategy.Arbitrage
         /// <param name="maxOrderbookPriceDeviation">1 == 100%</param>
         public ArbitrageStrategy(int? orderbookCountLimit, decimal maxOrderbookPriceDeviation)
         {
-            _orderbookCountLimit = orderbookCountLimit;
+            if (orderbookCountLimit == null)
+                orderbookCountLimit = int.MaxValue;
+            else
+                _orderbookCountLimit = (int) orderbookCountLimit;
+
             _maxOrderbookPriceDeviation = maxOrderbookPriceDeviation;
         }
 
@@ -33,13 +37,23 @@ namespace Strategy.Arbitrage
         /// <returns></returns>
         public async Task<Profit> CalculateSingleTransferProfitForPairAndExchange(string startEndCurrency, string tmpCurrency, IExchange startExchange, IExchange targetExchange, decimal startEndCurrencyVolume)
         {
-            //Tuple<string, string> startExchangePair = startExchange.MakeValidPair(currency1, currency2);
-            //if (startExchangePair == null)
-            //    throw new ArgumentException($"{currency1} and {currency2} is not valid pair for {startExchange.GetName()}");
+            bool startInverted = false;
+            bool targetInverted = false;
+            Tuple<string, string> startExchangePair = startExchange.MakeValidPair(startEndCurrency, tmpCurrency, out startInverted);
+            if (startExchangePair == null)
+            {
+                Console.WriteLine($"{startEndCurrency} and {tmpCurrency} is not valid pair for {startExchange.GetName()}");
+                return Profit.NoProfit();
+            }
+            //throw new ArgumentException($"{startEndCurrency} and {tmpCurrency} is not valid pair for {startExchange.GetName()}");
 
-            //Tuple<string, string> targetExchangePair = targetExchange.MakeValidPair(currency1, currency2);
-            //if (targetExchangePair == null)
-            //    throw new ArgumentException($"{currency1} and {currency2} is not valid pair for {targetExchange.GetName()}");
+            Tuple<string, string> targetExchangePair = targetExchange.MakeValidPair(startEndCurrency, tmpCurrency, out targetInverted);
+            if (targetExchangePair == null)
+            {
+                Console.WriteLine($"{startEndCurrency} and {tmpCurrency} is not valid pair for {targetExchange.GetName()}");
+                return Profit.NoProfit();
+            }
+            //throw new ArgumentException($"{startEndCurrency} and {tmpCurrency} is not valid pair for {targetExchange.GetName()}");
 
             OrderBook startOrderbook = null;
             OrderBook targetOrderbook = null;
@@ -47,7 +61,7 @@ namespace Strategy.Arbitrage
             try
             {
                  startOrderbook = await GetLimitedOrderbook(startExchange, startEndCurrency, tmpCurrency, _orderbookCountLimit);
-                 targetOrderbook = await GetLimitedOrderbook(targetExchange, startEndCurrency, tmpCurrency, _orderbookCountLimit);
+                 targetOrderbook = await GetLimitedOrderbook(targetExchange, tmpCurrency, startEndCurrency, _orderbookCountLimit); //must be inverted
             }
             catch(Exception ex)
             {
@@ -55,17 +69,20 @@ namespace Strategy.Arbitrage
             }
             //if there are no offers, then return profit 0
             if (!startOrderbook.bids.Any() || !targetOrderbook.asks.Any())
+            {
+                Console.WriteLine($"No bids or asks in orderbook");
                 return Profit.NoProfit();
+            }
             else
             {
                 decimal tmpVolume = startEndCurrencyVolume;
 
                 //buy fee %
                 decimal tsf1 = startExchange.CalculateTransacionFee(startEndCurrency, tmpCurrency);
-                tmpVolume *= (1-tsf1); //volume after fee
+                tmpVolume *= (1 - tsf1); //volume after fee
 
                 //recalculate to tmpCurrency
-                tmpVolume = tmpVolume * startOrderbook.BidWeightAvg(startEndCurrency, tmpCurrency) ; //todo: invert if pairs defined opposite way
+                tmpVolume = tmpVolume * startOrderbook.BidWeightAvg(); //!!! make sure it is inverted if needed
 
                 //transfer fee
                 decimal trf1 = startExchange.CalculateTransferFee(tmpCurrency, tmpVolume);
@@ -74,11 +91,11 @@ namespace Strategy.Arbitrage
                 //to do: make sure deposit fee is always 0
 
                 //sell fee %
-                decimal tsf2 = targetExchange.CalculateTransacionFee(startEndCurrency, tmpCurrency);
+                decimal tsf2 = targetExchange.CalculateTransacionFee(tmpCurrency, startEndCurrency);
                 tmpVolume *= (1 - tsf2); //volume after fee
 
                 //recalculate to startTargetCurrency
-                tmpVolume = tmpVolume * targetOrderbook.AskWeightAvg(tmpCurrency,startEndCurrency); //todo: invert if pairs defined opposite way
+                tmpVolume = tmpVolume * targetOrderbook.AskWeightAvg(); //!!! make sure it is inverted if needed
 
                 //todo: take fees into account
                 Profit profit = new Profit()
@@ -92,15 +109,20 @@ namespace Strategy.Arbitrage
             }
         }
 
-        private async Task<OrderBook> GetLimitedOrderbook(IExchange exchange, string currency1, string currency2, int? countLimit = null)
-        {
+        private async Task<OrderBook> GetLimitedOrderbook(IExchange exchange, string currency1, string currency2, int countLimit)
+        {           
             var startTicker = await exchange.GetTicker(currency1, currency2);
 
-            var startBidLimit = (1 - _maxOrderbookPriceDeviation) * startTicker.last; //number is percentage variation of price which we want to allow
-            var startAskLimit = (1 + _maxOrderbookPriceDeviation) * startTicker.last; //number is percentage variation of price which we want to allow
+            var bidLimit = (1 - _maxOrderbookPriceDeviation) * startTicker.last; //number is percentage variation of price which we want to allow
+            var askLimit = (1 + _maxOrderbookPriceDeviation) * startTicker.last; //number is percentage variation of price which we want to allow
 
-            return await exchange.GetOrderbook(currency1, currency2, startBidLimit, startAskLimit, countLimit);
+            var orderBook = await exchange.GetOrderbook(currency1, currency2, countLimit);
+            orderBook.asks = orderBook.asks.Where(a => bidLimit < a.price && a.price < askLimit).ToList().Take(countLimit).ToList();
+            orderBook.bids = orderBook.bids.Where(b => askLimit > b.price && b.price > bidLimit).ToList().Take(countLimit).ToList();
+
+            return orderBook;
         }
+
 
         public List<Tuple<string, string, string, decimal, decimal>> CalculatePriceDifference(List<TickerListItem> tickerList)
         {

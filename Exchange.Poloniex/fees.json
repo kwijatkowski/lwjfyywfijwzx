@@ -1,0 +1,72 @@
+{
+  "transfer": [
+    {
+      "currency": "any",
+      "incoming": 0,
+      "outgoing": 0,
+      "feeType": "absolute"
+    }
+  ],
+  "transaction": [
+    {
+      "treshold": 600,
+      "maker": 0.0015,
+      "taker": 0.0025,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 1200,
+      "maker": 0.0014,
+      "taker": 0.0024,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 2400,
+      "maker": 0.0012,
+      "taker": 0.0022,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 6000,
+      "maker": 0.001,
+      "taker": 0.002,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 12000,
+      "maker": 0.0008,
+      "taker": 0.0016,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 18000,
+      "maker": 0.0005,
+      "taker": 0.0014,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 24000,
+      "maker": 0.0002,
+      "taker": 0.0012,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 60000,
+      "maker": 0,
+      "taker": 0.001,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 120000,
+      "maker": 0,
+      "taker": 0.0008,
+      "feeType": "percentage"
+    },
+    {
+      "treshold": 999999999999999,
+      "maker": 0,
+      "taker": 0.0005,
+      "feeType": "percentage"
+    }
+  ]
+}

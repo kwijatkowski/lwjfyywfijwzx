@@ -1,5 +1,6 @@
 ﻿using Exchange.BitBay;
 using Exchange.Kraken;
+using Exchange.Poloniex;
 using Exchange.MarketUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace startup
 {
@@ -19,55 +21,72 @@ namespace startup
         //public static string publicApiAddress { get { return "https://api.kraken.com/0/public/"; } }
         //public static string privateApiAddress = string.Empty;//{ get { return "https://api.kraken.com/0/public/"; } }
 
-        public static string configDirPath = @"F:\BestTraderInTheWorld\";
+        //public static string configDirPath = @"F:\BestTraderInTheWorld\";
+        public static string configDirPath = @"C:\Projects\Priv\Bot\";
+
+        //public static string feesJsonPath = @"F:\BestTraderInTheWorld\Exchange.BitBay\fees.json";
+        public static string feesJsonPath = @"C:\Projects\Priv\Bot\Exchange.BitBay\fees.json";
+        public static string feesJsonPoloniex = @"C:\Projects\Priv\Bot\Exchange.Poloniex\fees.json";
 
         public static string bitbayConfigPath = configDirPath + "BitBay.exconf";
         public static string krakenConfigPath = configDirPath + "Kraken.exconf";
 
+        
+
         private static void Main(string[] args)
         {
-            Task.Run(async () =>
+            string x = string.Empty;
+            while (x != "x")
             {
-                List<string> commonCurrencies = CommonCurrencies(new List<Dictionary<string, string>>() { Exchange.Kraken.CurrenciesNamesMap.MapCrypto, Exchange.BitBay.CurrenciesNamesMap.MapCrypto });
-
-                List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
+                Task.Run(async () =>
                 {
-                    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum   ),
-                    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin   ),
-                    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash ),
+                    List<string> commonCurrencies = CommonCurrencies(new List<Dictionary<string, string>>() { Exchange.Kraken.CurrenciesNamesMap.MapCrypto, Exchange.BitBay.CurrenciesNamesMap.MapCrypto });
 
-                    //new Tuple<string, string>(Currencies.USD , Currencies.Bitcoin   ),
-                    //new Tuple<string, string>(Currencies.PLN , Currencies.Bitcoin   )
-                };
+                    List<Tuple<string, string, decimal>> tradingPairs = new List<Tuple<string, string, decimal>>()
+                    {
+                    new Tuple<string, string,decimal>(Currencies.Bitcoin , Currencies.Ethereum, new decimal(0.5)  )
+                    //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin   ),
+                    //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash ),
 
-                decimal startCurrencyVolume = new decimal(0.04);
+                    //new Tuple<string, string, decimal>(Currencies.USD , Currencies.Ethereum, new decimal(1000) ),
+                        //new Tuple<string, string>(Currencies.PLN , Currencies.Bitcoin   )
+                    };
 
-                var bbConfig = new ExchangeConfig();
-                bbConfig.Load(bitbayConfigPath);
+                    decimal startCurrencyVolume = new decimal(0.04);
 
-                var krakenConfig = new ExchangeConfig();
-                krakenConfig.Load(krakenConfigPath);
+                    var bbConfig = new ExchangeConfig();
+                    bbConfig.Load(bitbayConfigPath);
 
-                string feesJsonPath = @"F:\BestTraderInTheWorld\Exchange.BitBay\fees.json";
-                var bitbay = new BitBay(bbConfig, 0, File.ReadAllText(feesJsonPath));
-                var kraken = new Kraken(krakenConfig, 0);
+                    var krakenConfig = new ExchangeConfig();
+                    krakenConfig.Load(krakenConfigPath);
 
-                List<IExchange> exchanges = new List<IExchange>() {
+
+                    var bitbay = new BitBay(bbConfig, 0, File.ReadAllText(feesJsonPath));
+                    var kraken = new Kraken(krakenConfig, 0);
+                    var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPath), 0);
+
+                    List<IExchange> exchanges = new List<IExchange>() {
                     bitbay,kraken
-                    //new Poloniex("https://poloniex.com/public"),
-            };
+                        //new Poloniex("https://poloniex.com/public"),
+                    };
 
-                ArbitrageStrategy strategy = new ArbitrageStrategy(10, new decimal(0.3));
+                    ArbitrageStrategy strategy = new ArbitrageStrategy(3, new decimal(0.3));
 
-                foreach (var pair in tradingPairs)
-                {
-                    Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, kraken, startCurrencyVolume);
-                    Console.WriteLine($"{bitbay.GetName()} -> {kraken.GetName()} pair {pair.Item1} {pair.Item2} profit: {profit.absoluteValue} [{profit.currency}] or {profit.percent.ToString()}%");
-                }
-            }).GetAwaiter().GetResult();
+                    foreach (var pair in tradingPairs)
+                    {
+                        //Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, kraken, pair.Item3);
+                        //Console.WriteLine($"{bitbay.GetName()} -> {kraken.GetName()} pair {pair.Item1} {pair.Item2} profit: {Math.Round(profit.absoluteValue,8)} [{profit.currency}] or {profit.percent.ToString("F")}%");
+
+                        Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, poloniex, pair.Item3);
+                        Console.WriteLine($"{bitbay.GetName()} -> {poloniex.GetName()} pair {pair.Item1} {pair.Item2} profit: {Math.Round(profit.absoluteValue, 8)} [{profit.currency}] or {profit.percent.ToString("F")}%");
+                    }
+                }).GetAwaiter().GetResult();
+
+                Thread.Sleep(3000);
+                Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
+            }
 
             Console.WriteLine("Finished...");
-            Console.ReadLine();
         }
 
         public static async void GetTickersAndCalculatePriceDifferences(List<IExchange> exchanges, List<string> commonCurrencies, string currency2)

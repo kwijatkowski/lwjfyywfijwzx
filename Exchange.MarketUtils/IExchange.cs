@@ -14,9 +14,9 @@ namespace Exchange.MarketUtils
         /// <returns>Name of exchange</returns>
         string GetName();
         Task<Ticker> GetTicker(string currency1, string currency2);
-        Task<OrderBook> GetOrderbook(string currency1, string currency2, decimal bidLimit, decimal askLimit, int? countLimit = null);
+        Task<OrderBook> GetOrderbook(string currency1, string currency2, int? countLimit = null);
 
-        List<string> GetTradablePairs();
+        //List<string> GetTradablePairs();
 
         /// <summary>
         /// Returning pair in correct order if it is acceptable by exchange. If not null
@@ -24,7 +24,7 @@ namespace Exchange.MarketUtils
         /// <param name="currency1"></param>
         /// <param name="currency2"></param>
         /// <returns></returns>
-        Tuple<string,string> MakeValidPair(string currency1, string currency2);
+        Tuple<string,string> MakeValidPair(string currency1, string currency2, out bool inverted);
 
         decimal CalculateTransacionFee(string startCurrency, string targetCurrency);
 

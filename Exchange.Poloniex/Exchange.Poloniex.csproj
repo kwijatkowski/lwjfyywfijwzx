@@ -47,8 +47,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CurrenciesNamesMap.cs" />
+    <Compile Include="OperationCostCalculator.cs" />
     <Compile Include="Poloniex.cs" />
     <Compile Include="PoloniexCurrenciesInfo.cs" />
+    <Compile Include="PoloniexFees.cs" />
     <Compile Include="PoloniexTicker.cs" />
     <Compile Include="PublicApiConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
