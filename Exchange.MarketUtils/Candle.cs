@@ -8,6 +8,7 @@ namespace Exchange.MarketUtils
 {
         public class Candle
         {
+
             public decimal Open { get; }
             public decimal High { get; }
             public decimal Close { get; }

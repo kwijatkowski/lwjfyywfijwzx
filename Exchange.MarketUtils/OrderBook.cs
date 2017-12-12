@@ -81,7 +81,7 @@ namespace Exchange.MarketUtils
 
         public OrderBook Invert(OrderBook ob)
         {
-            OrderBook inverted = new OrderBook(ob.currency1, ob.currency2);
+            OrderBook inverted = new OrderBook(ob.currency2, ob.currency1);
 
             foreach (var bid in ob.bids)
                 inverted.bids.Add(new Bid() { price = 1 / bid.price, timestamp = bid.timestamp, volume = bid.volume * bid.price });

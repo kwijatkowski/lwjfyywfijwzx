@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 //using Newtonsoft.Json;
 //using Newtonsoft.Json.Linq;
+using System.Globalization;
 
 namespace Exchange.Poloniex
 {
@@ -31,7 +32,7 @@ namespace Exchange.Poloniex
             _publicApiURL = baseAddress;
             _publicApiConnector = new PublicApiConnector(_publicApiURL);
             _feesJson = feesJson;
-            _monthlyVolume = accountMonthlyVolume;            
+            _monthlyVolume = accountMonthlyVolume;
         }
 
         public string GetName()
@@ -42,7 +43,7 @@ namespace Exchange.Poloniex
         public async Task<Ticker> GetTicker(string currency1, string currency2)
         {
             bool inverted = false;
-            Tuple<string,string> orderedPair = MakeValidPair(currency1, currency2, out inverted);
+            Tuple<string, string> orderedPair = MakeValidPair(currency1, currency2, out inverted);
 
             if (orderedPair == null)
                 return null;
@@ -57,14 +58,14 @@ namespace Exchange.Poloniex
             if (!deserialized.TryGetValue(pair, out ticker))
                 throw new Exception($"Unable to get ticker for {currency1} and {currency2} at {GetName()}");
 
-             Ticker t = new Ticker()
-                {
-                    ask = ticker.lowestAsk,
-                    bid = ticker.highestBid,
-                    last = ticker.last,
-                    min = ticker.low24hr,
-                    max = ticker.high24hr
-                };
+            Ticker t = new Ticker()
+            {
+                ask = ticker.lowestAsk,
+                bid = ticker.highestBid,
+                last = ticker.last,
+                min = ticker.low24hr,
+                max = ticker.high24hr
+            };
 
             if (inverted)
                 return t.Invert(t);
@@ -74,7 +75,19 @@ namespace Exchange.Poloniex
 
         public async Task<OrderBook> GetOrderbook(string currency1, string currency2, int? limit = null)
         {
-            throw new NotImplementedException();
+            bool inverted = false;
+            var orderedPair = MakeValidPair(currency1, currency2, out inverted);
+            string pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
+
+            string book = await _publicApiConnector.GetOrderBook(pair, limit);
+            PoloniexOrderBook orderBook = JsonConvert.DeserializeObject<PoloniexOrderBook>(book);
+
+            OrderBook bk = PoloniexOrderBookToOrderBook(orderedPair.Item1, orderedPair.Item2, orderBook);
+
+            if (inverted)
+                return bk.Invert(bk);
+            else
+                return bk;
         }
 
         public decimal CalculateTransacionFee(string currency1, string currency2)
@@ -83,8 +96,9 @@ namespace Exchange.Poloniex
             var orderedPair = MakeValidPair(currency1, currency2, out inverted);
             string pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
 
-            return decimal.MaxValue;
+            //return decimal.MaxValue;
 
+            return 0;
         }
 
         public decimal CalculateTransferFee(string transferCurrency, decimal volume = 0)
@@ -100,7 +114,7 @@ namespace Exchange.Poloniex
             {
                 string response = _publicApiConnector.Get24hVolume().GetAwaiter().GetResult();
                 var pairsDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
-                _tradablePairs = pairsDict.Keys.ToList();               
+                _tradablePairs = pairsDict.Keys.ToList();
             }
 
             return _tradablePairs;
@@ -127,7 +141,51 @@ namespace Exchange.Poloniex
                 inverted = false;
                 return null;
             }
+        }
 
+        private OrderBook PoloniexOrderBookToOrderBook(string currency1, string currency2, PoloniexOrderBook poloniexBook)
+        {
+            OrderBook book = new OrderBook(currency1, currency2);
+
+            foreach (var ask in poloniexBook.asks)
+            {
+                book.asks.Add(
+                    new Ask
+                    {
+                        price = Convert.ToDecimal(ask[0],CultureInfo.InvariantCulture),
+                        volume = Convert.ToDecimal(ask[1], CultureInfo.InvariantCulture),
+                        timestamp = new DateTime()
+                    }
+                );
+            }
+
+            foreach (var bid in poloniexBook.bids)
+            {
+                book.bids.Add(
+                    new Bid
+                    {
+                        price = Convert.ToDecimal(bid[0], CultureInfo.InvariantCulture),
+                        volume = Convert.ToDecimal(bid[1], CultureInfo.InvariantCulture),
+                        timestamp = new DateTime()
+                    }
+                );
+            }
+
+            return book;
+        }
+
+        public async Task<string> GetHistoricalData(string currency1, string currency2, DateTime start, DateTime end, int periodSeconds)
+        {
+            bool inverted = false;
+            var orderedPair = MakeValidPair(currency1, currency2, out inverted);
+            string pair;
+            
+            if (inverted)
+                pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item2, orderedPair.Item1);
+            else
+             pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
+
+            return await _publicApiConnector.GetChartData(pair, UnixTimestamp.ToUnixTimestamp(start), UnixTimestamp.ToUnixTimestamp(end), periodSeconds);
         }
     }
 }

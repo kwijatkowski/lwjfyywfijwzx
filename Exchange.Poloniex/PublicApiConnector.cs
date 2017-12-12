@@ -57,6 +57,39 @@ namespace Exchange.Poloniex
 
         }
 
+        public async Task<string> GetOrderBook(string pair, int? count = null)
+        {
+            string relative = string.Empty;
+
+            Dictionary<string, string> parameters = new Dictionary<string, string>()
+            {
+                { "command", "returnOrderBook"},
+                { "currencyPair", pair}
+            };
+
+            if (count != null)
+                parameters.Add("depth", count.ToString());
+
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
+        }
+
+        public async Task<string> GetChartData(string pair, long start, long end, int period)
+        {
+            string relative = string.Empty;
+
+            Dictionary<string, string> parameters = new Dictionary<string, string>()
+            {
+                { "command", "returnChartData"},
+                { "currencyPair", pair},
+                { "end", end.ToString()},
+                { "period", period.ToString()},
+                { "start", start.ToString()}
+            };
+
+            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
+        }
+
+
         //  HELP
 
         private string BuildRequestUrl(string baseAddress, string method, Dictionary<string, string> parameters = null)
