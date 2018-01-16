@@ -14,6 +14,7 @@ using System.Threading;
 using log4net;
 using log4net.Core;
 using Strategy.SCTP_BREAKOUT;
+using Strategy.RSI;
 
 namespace startup
 {
@@ -38,8 +39,8 @@ namespace startup
 
         private static void Main(string[] args)
         {
-            string marketDataDir = @""
-            ILog log = new ConsoleLogger();
+            string logFilePath = @"C:\Projects\Priv\tmp\Release\logTestApp.txt";
+            ILog log = new ConsoleLogger(logFilePath);
 
             string x = string.Empty;
 
@@ -48,29 +49,70 @@ namespace startup
             //var kraken = new Kraken(krakenConfig, 0);
             var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
 
+            //List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>();
+            //List<string> pairs = poloniex.GetTradablePairs();
+
+            //foreach (var pair in pairs)
+            //{
+            //    var namesPair = Exchange.Poloniex.CurrenciesNamesMap.PairToCurrenciesNames(pair);
+
+            //    if (namesPair == null)
+            //        continue;
+
+            //    tradingPairs.Add(namesPair);
+            //}
+
+            //tradingPairs = tradingPairs.Where(p => p.Item1 == Currencies.Bitcoin).ToList();
+
             List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
             {
-                new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum),
-                new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash)              
+                //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum),
+                //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin),
+                //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash),
+                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Ripple)
+                //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Monero)
             };
 
-            TimeSpan candleTimeSpan = new TimeSpan(0, 0, 30);
-            int ticksInCandle = 10;
-            TimeSpan tickTimeSpan = new TimeSpan(0,0,candleTimeSpan.Seconds / ticksInCandle);
-            int candlesInTimeframe = 10;
-            int totalCandles = ticksInCandle * candlesInTimeframe;                               
 
-            SctpBreakout breakoutStrategy = new SctpBreakout(poloniex, tradingPairs, new TimeSpan(0, 0, 30), totalCandles, new decimal(0.05), log);
+            //decimal startBalance = 1000;
+            //int candleSeconds = 300;
+            //TimeSpan candleInterval = new TimeSpan(0, 0, candleSeconds);
+            //int ticksInCandle = 100;
+            //TimeSpan tickTimeSpan = new TimeSpan(0,0,(int) candleInterval.TotalSeconds / ticksInCandle);
+            //int candlesInTimeframe = 24 * 7 * 3600 / candleSeconds; //week            
+
+            //log.Debug($"{DateTime.Now.ToString()} max candles {candlesInTimeframe}");
+
+            //Dictionary<string, List<Candle>> historicalData = new Dictionary<string, List<Candle>>();
+
+            //foreach(var pair in tradingPairs)
+            //{
+            //    log.Debug($"{DateTime.Now.ToString()} initializing market for {pair.Item1} {pair.Item2}");
+            //    var hist4pairJson = poloniex.GetHistoricalData(pair.Item1, pair.Item2, DateTime.Now - new TimeSpan(7, 2, 0, 0), DateTime.Now, candleSeconds).GetAwaiter().GetResult();
+            //    List<Candle> candles = JsonConvert.DeserializeObject<List<Candle>>(hist4pairJson);
+            //    historicalData.Add(pair.Item1 + pair.Item2, candles.Take(candlesInTimeframe).ToList());
+            //}
+
+            //SctpBreakout breakoutStrategy = new SctpBreakout(poloniex, tradingPairs, historicalData, candleInterval, candlesInTimeframe, new decimal(0.05), startBalance, log);
+
+            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs,25, 14, 1800, log);
 
             while(true)
             {
-                Task.Run(async () =>
+                try
                 {
-                   await breakoutStrategy.Run();
-                }).GetAwaiter().GetResult();
+                    //Task.Run(async () =>
+                    //{
+                    //    await rsiStrategy.Run();
+                    //}).GetAwaiter().GetResult();
+                    rsiStrategy.Run();
+                }
+                catch (Exception ex)
+                {
+                    log.Debug(ex.Message);
+                }
 
-                Thread.Sleep(tickTimeSpan.Seconds *1000);
+                Thread.Sleep(10 *1000);
                 Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
             }
 
@@ -179,6 +221,17 @@ namespace startup
 
     public class ConsoleLogger : ILog
     {
+
+        string path;
+
+        public ConsoleLogger()
+        { }
+
+        public ConsoleLogger(string path)
+        {
+            this.path = path;
+        }
+
         public bool IsDebugEnabled
         {
             get
@@ -229,6 +282,13 @@ namespace startup
 
         public void Debug(object message)
         {
+            if (path != null)
+            {
+                string msg = (string)message;
+                List<string> lines = new List<string>() { msg };
+                File.AppendAllLines(path, lines);
+            }
+
             Console.WriteLine((string)message);
         }
 
@@ -339,7 +399,7 @@ namespace startup
 
         public void Info(object message, Exception exception)
         {
-            !!!
+          //  !!!
         }
 
         public void InfoFormat(string format, object arg0)

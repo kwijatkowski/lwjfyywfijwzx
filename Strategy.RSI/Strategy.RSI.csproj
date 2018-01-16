@@ -4,18 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F13F453D-6847-4ED4-A5E3-F46535D33C11}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{245C0569-2BA2-4CC1-8F2C-B1C53927AD1C}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>startup</RootNamespace>
-    <AssemblyName>startup</AssemblyName>
+    <RootNamespace>Strategy.RSI</RootNamespace>
+    <AssemblyName>Strategy.RSI</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -25,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -52,22 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestApp.cs" />
+    <Compile Include="RsiStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Exchange.BitBay\Exchange.BitBay.csproj">
-      <Project>{e6e13bbf-b6d1-4a9a-9eb3-c18b888f6ebe}</Project>
-      <Name>Exchange.BitBay</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Exchange.Kraken\Exchange.Kraken.csproj">
-      <Project>{cdaf7087-503f-4ce3-81a5-686d5300a487}</Project>
-      <Name>Exchange.Kraken</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Exchange.MarketUtils\Exchange.MarketUtils.csproj">
       <Project>{8a4b69a0-43f9-4e55-ba5d-a7a7fc73513c}</Project>
       <Name>Exchange.MarketUtils</Name>
@@ -76,18 +61,9 @@
       <Project>{84c9edc8-f9cf-4c6b-80a3-b84983ab24b2}</Project>
       <Name>Exchange.Poloniex</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Strategy.Arbitrage\Strategy.Arbitrage.csproj">
-      <Project>{b33e3249-c390-4dae-97cd-727fc1cd3bb5}</Project>
-      <Name>Strategy.Arbitrage</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Strategy.RSI\Strategy.RSI.csproj">
-      <Project>{245c0569-2ba2-4cc1-8f2c-b1c53927ad1c}</Project>
-      <Name>Strategy.RSI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Strategy.SCTP_BREAKOUT\Strategy.SCTP_BREAKOUT.csproj">
-      <Project>{096afdd9-3fa3-442c-a8c5-15a7057e5f68}</Project>
-      <Name>Strategy.SCTP_BREAKOUT</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -15,13 +15,13 @@ namespace Strategy.SCTP_BREAKOUT
         decimal _targetProfit;
         int _candlesCount;
         
-        TimeSpan _interval;
+        TimeSpan _candleInterval;
 
-        decimal currentBalance;
-        decimal prevBalance;
-        decimal positionBalance;
+        //decimal currentBalance;
+        //decimal prevBalance;
+        //decimal positionBalance;
 
-        decimal range = new decimal(0.03);
+        decimal range = new decimal(0.03); //treshold - of price peak not within this boundary, then we missed the moment and do not want ot buy now
         ILog logger;
 
         /// <summary>
@@ -29,17 +29,16 @@ namespace Strategy.SCTP_BREAKOUT
         /// </summary>
         /// <param name="exchange"></param>
         /// <param name="pairs"></param>
-        /// <param name="interval"></param>
+        /// <param name="candleInterval">candle interval</param>
         /// <param name="candlesInWindow">Candles in considered time window</param>
         /// <param name="targetProfit"></param>
         /// <param name="logger"></param>
-        public SctpBreakout(IExchange exchange, List<Tuple<string,string>> pairs, TimeSpan interval, int candlesInWindow, decimal targetProfit, decimal startBalance, ILog logger)
-        {
-            currentBalance = startBalance;
+        public SctpBreakout(IExchange exchange, List<Tuple<string,string>> pairs, Dictionary<string,List<Candle>> marketInitializationData, TimeSpan candleInterval, int candlesInWindow, decimal targetProfit, decimal startBalance, ILog logger)
+        {            
             _exchange = exchange;
             _candlesCount = candlesInWindow;
             _targetProfit = targetProfit;
-            _interval = interval;
+            _candleInterval = candleInterval;
             _markets = new List<MarketToProcess>();
             this.logger = logger;
 
@@ -48,12 +47,18 @@ namespace Strategy.SCTP_BREAKOUT
                 bool isInverted = false;
                 var ordered = exchange.MakeValidPair(pair.Item1, pair.Item2, out isInverted);
 
-                MarketToProcess market;
+                List<Candle> marketInitializationCandles = null;
 
-                if (isInverted)
-                    market = new MarketToProcess(ordered.Item1, ordered.Item2, _candlesCount);
-                else
-                    market = new MarketToProcess(ordered.Item2, ordered.Item1, _candlesCount);
+                if (marketInitializationData != null)
+                marketInitializationData.TryGetValue(string.Concat(ordered.Item1, ordered.Item2), out marketInitializationCandles);
+
+                MarketToProcess market
+                = new MarketToProcess(
+                    ordered.Item1,
+                    ordered.Item2,
+                    _candlesCount,
+                    startBalance / pairs.Count, //equally for the markets
+                    marketInitializationCandles);                       
 
                 _markets.Add(market);
             }
@@ -76,7 +81,7 @@ namespace Strategy.SCTP_BREAKOUT
                 //get current ticker
                 Ticker ticker = await _exchange.GetTicker(market.currency1, market.currency2);
 
-                Run(now, _interval, market, ticker);
+                Run(now, _candleInterval, market, ticker);
             }
         }
 
@@ -86,7 +91,7 @@ namespace Strategy.SCTP_BREAKOUT
             {
                 market.PushCandle(TickersToCandle(market.lastCandleTickers));
                 market.lastCandleClosedTime = DateTime.Now;
-                logger.Debug($"{DateTime.Now.ToString()} {market.currency1} {market.currency2} Candle pushed, now {market.candles.Count}");
+                //logger.Debug($"{DateTime.Now.ToString()} {market.currency1} {market.currency2} Candle pushed, now {market.candles.Count}");
                 market.CleanTickers();
             }
             else
@@ -95,10 +100,14 @@ namespace Strategy.SCTP_BREAKOUT
             }
 
             //is ticker price new highest price in timeframe we analyze?
-            if (ticker.last > market.timeframeHighPrice || market.timeframeHighPrice == null)
+            if (market.timeframeHighPrice != null && ticker.last > market.timeframeHighPrice)
             {
-                market.timeframeHighPrice = ticker.last;
-                logger.Debug($"{now.ToString()} {market.currency1} {market.currency2} new highest price {market.timeframeHighPrice}");
+                //market.timeframeHighPrice = ticker.last;
+                logger.Debug($"{now.ToString()} {market.currency1} {market.currency2} NEW!!!!!!! highest price {market.timeframeHighPrice} in timeframe");
+            }
+            else if (market.timeframeHighPrice != null)
+            {
+                //logger.Debug($"{now.ToString()} {market.currency1} {market.currency2} timeframe highest {market.timeframeHighPrice}");
             }
 
             ProcessBuySell(market, ticker);
@@ -106,15 +115,14 @@ namespace Strategy.SCTP_BREAKOUT
 
         public void ProcessBuySell(MarketToProcess market, Ticker ticker)
         {
-            //check if this is new highest price
             if (ShouldBuy(market, ticker))
             {
-                logger.Debug($" {market.currency1} {market.currency2} bougth at {ticker.last}");
+                logger.Debug($" BUY!!!!!!!!!!!!!!!!!!!!!!!!!!!! {market.currency1} {market.currency2} bougth at {ticker.last}");
                 ///FAKE
                 market.buyPrice = ticker.last;
                 market.sellPrice  = ticker.last * (1 + _targetProfit);
-                positionBalance = currentBalance / ticker.last;
-                prevBalance = currentBalance;
+                market.availableBalance = market.availableBalance / ticker.last;
+                market.previousBalance = market.availableBalance;
                 ///FAKE
 
                 market.status = MarketToProcess.STATUS.IN_POSITION;
@@ -124,31 +132,29 @@ namespace Strategy.SCTP_BREAKOUT
 
             if (ShouldSell(market, ticker))
             {
-                logger.Debug($" {market.currency1} {market.currency2} sold at {ticker.last}");
+                logger.Debug($" SELL!!!!!!!!!!!!!!!!!!!!!!!!!!!! {market.currency1} {market.currency2} sold at {ticker.last}");
 
                 ///FAKE
-                currentBalance = positionBalance * ticker.last;
+                market.availableBalance = market.availableBalance * ticker.last;
                 ///FAKE
                 ///
-                logger.Debug($" {market.currency1} {market.currency2} profit {currentBalance - prevBalance}");
+                logger.Debug($" {market.currency1} {market.currency2} profit {market.availableBalance - market.previousBalance}");
                 market.status = MarketToProcess.STATUS.OPEN;
 
-                if (currentBalance <= prevBalance)
+                if (market.availableBalance <= market.previousBalance)
                 {
-                    logger.Debug($" {market.currency1} {market.currency2} ERROR {currentBalance - prevBalance}");
+                    logger.Debug($" {market.currency1} {market.currency2} ERROR {market.availableBalance - market.previousBalance}");
                     //logger.Debug($" {market.currency1} {market.currency2} profit {currentBalance - prevBalance}");
                     //   throw new Exception("something went wrong - we are making loses");
-                }
-                else
-                    currentBalance = prevBalance;
+                }                
             }
         }
 
-        private bool VolumeWithinRange(decimal actualVolume, decimal desiredVolume)
+        private bool ValueWithinRange(decimal actualValue, decimal desiredValue)
         {
             if (
-                actualVolume < desiredVolume * (1 + range) &&
-                actualVolume > desiredVolume * (1 - range))
+                actualValue < desiredValue * (1 + range) &&
+                actualValue > desiredValue * (1 - range))
             {
                 return true;
             }
@@ -175,7 +181,7 @@ namespace Strategy.SCTP_BREAKOUT
 
             //check for candle separation and boilinger bands
 
-            if (market.timeframeHighPrice <= t.last)
+            if (market.timeframeHighPrice <= t.last && t.last < market.timeframeHighPrice * (1+range) )
                 return true;
             else
                 return false;                
@@ -201,6 +207,8 @@ namespace Strategy.SCTP_BREAKOUT
 
         public string currency1;
         public string currency2;
+        public decimal availableBalance;
+        public decimal previousBalance;
         public Queue<Candle> candles;
         public List<Ticker> lastCandleTickers;        
         private int _timeframeCandlesCount;
@@ -212,14 +220,27 @@ namespace Strategy.SCTP_BREAKOUT
         public decimal? sellPrice;
         public STATUS status;
 
-        public MarketToProcess(string currency1, string currency2, int timeframeCandlesCount)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="currency1"></param>
+        /// <param name="currency2"></param>
+        /// <param name="timeframeCandlesCount">This is as number of candles which will be kept and analyzed</param>
+        /// <param name="historicalData"></param>
+        public MarketToProcess(string currency1, string currency2, int timeframeCandlesCount, decimal availabeBalance, List<Candle> historicalData = null)
         {
+            availableBalance = availabeBalance;
             lastCandleClosedTime = DateTime.Now;
-            timeframeHighPrice = null;
             _timeframeCandlesCount = timeframeCandlesCount;
             this.currency1 = currency1;
             this.currency2 = currency2;
-            candles = new Queue<Candle>();
+            candles = historicalData == null ? new Queue<Candle>() : new Queue<Candle>(historicalData.Take(timeframeCandlesCount));
+
+            if (candles != null)
+                timeframeHighPrice = candles.Max(c => c.Close);
+            else
+                timeframeHighPrice = null;
+
             lastCandleTickers = new List<Ticker>();
         }
 

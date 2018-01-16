@@ -326,6 +326,30 @@ namespace Exchange.Poloniex
             return string.Concat(symbol1, "_", symbol2);
         }
 
+        public static Tuple<string,string> PairToCurrenciesNames(string pair)
+        {
+            List<string> symbols = pair.Split('_').ToList();
+
+            if (symbols.Count != 2)
+                return null;//throw new Exception($"invalid pair {pair}");
+
+            string currency1 = SymbolToName(symbols[0]);
+            string currency2 = SymbolToName(symbols[1]);
+
+            if (currency1 != null && currency2 != null)
+                return new Tuple<string, string>(currency1, currency2);
+            else
+                return null;
+        }
+
+        private static string SymbolToName(string symbol)
+        {           
+            if (MapCrypto.Any(e => e.Value == symbol))
+                return MapCrypto.First(e => e.Value == symbol).Key;
+            else
+                return null;                
+        }
+
         /// <summary>
         ///
         /// </summary>

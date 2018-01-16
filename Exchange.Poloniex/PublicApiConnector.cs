@@ -86,7 +86,8 @@ namespace Exchange.Poloniex
                 { "start", start.ToString()}
             };
 
-            return await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
+            string returnedData = await GetDataFromAddress<string>(BuildRequestUrl(_baseAddress, relative, parameters));
+            return returnedData;
         }
 
 

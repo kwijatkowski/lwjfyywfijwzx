@@ -174,8 +174,21 @@ namespace Exchange.Poloniex
             return book;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="currency1"></param>
+        /// <param name="currency2"></param>
+        /// <param name="start"></param>
+        /// <param name="end">now is 9999999999 pass DateTime.MaxValue if you want recent data</param>
+        /// <param name="periodSeconds"> valid values are 300, 900, 1800, 7200, 14400, and 86400</param>
+        /// <returns></returns>
         public async Task<string> GetHistoricalData(string currency1, string currency2, DateTime start, DateTime end, int periodSeconds)
         {
+            long startUnix = UnixTimestamp.ToUnixTimestamp(start);
+            long endUnix = end == DateTime.MaxValue ? 9999999999 : UnixTimestamp.ToUnixTimestamp(end);
+                           
+
             bool inverted = false;
             var orderedPair = MakeValidPair(currency1, currency2, out inverted);
             string pair;
@@ -185,7 +198,7 @@ namespace Exchange.Poloniex
             else
              pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
 
-            return await _publicApiConnector.GetChartData(pair, UnixTimestamp.ToUnixTimestamp(start), UnixTimestamp.ToUnixTimestamp(end), periodSeconds);
+            return await _publicApiConnector.GetChartData(pair, startUnix, endUnix, periodSeconds);
         }
     }
 }

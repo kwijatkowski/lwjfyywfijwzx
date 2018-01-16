@@ -43,6 +43,7 @@ namespace Strategy.SCTP_BREAKOUTTests
             SctpBreakout breakoutStrategy = new SctpBreakout(
                 exchange,
                 new List<Tuple<string, string>>(),
+                null,
                 new TimeSpan(0, 0, candlePeriodSeconds),
                 candlesInTimeframe,
                 new decimal(0.05),
@@ -55,9 +56,9 @@ namespace Strategy.SCTP_BREAKOUTTests
             MarketToProcess market;
 
             if (isInverted)
-                market = new MarketToProcess(ordered.Item1, ordered.Item2, candlesInTimeframe);
+                market = new MarketToProcess(ordered.Item1, ordered.Item2, candlesInTimeframe, startBalance);
             else
-                market = new MarketToProcess(ordered.Item2, ordered.Item1, candlesInTimeframe);
+                market = new MarketToProcess(ordered.Item2, ordered.Item1, candlesInTimeframe, startBalance);
 
             for (int i = 0; i < candles.Count - 1; i++)
             {
