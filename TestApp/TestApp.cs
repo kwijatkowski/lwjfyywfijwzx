@@ -30,7 +30,7 @@ namespace startup
 
         //public static string feesJsonPath = @"F:\BestTraderInTheWorld\Exchange.BitBay\fees.json";
         public static string feesJsonPath = @"C:\Projects\Priv\Bot\Exchange.BitBay\fees.json";
-        public static string feesJsonPoloniex = @"C:\Projects\Priv\Bot\Exchange.Poloniex\fees.json";
+        public static string feesJsonPoloniex = Path.Combine(Environment.CurrentDirectory, "Poloniex_fees.json");
 
         public static string bitbayConfigPath = configDirPath + "BitBay.exconf";
         public static string krakenConfigPath = configDirPath + "Kraken.exconf";
@@ -39,7 +39,7 @@ namespace startup
 
         private static void Main(string[] args)
         {
-            string logFilePath = @"C:\Projects\Priv\tmp\Release\logTestApp.txt";
+            string logFilePath = @"C:\temp\logTestApp.txt";
             ILog log = new ConsoleLogger(logFilePath);
 
             string x = string.Empty;
