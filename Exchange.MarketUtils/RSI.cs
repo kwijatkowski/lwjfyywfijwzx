@@ -8,7 +8,10 @@ namespace Exchange.MarketUtils
         public decimal CalculateRSI(List<decimal> closingPrices, int period)
         {
             if (closingPrices.Count <= period)
-                throw new Exception($"Need more data to calculate RSI. Closing prices data count {closingPrices.Count} requested period {period}");
+            {
+                return 100; //just for now. Do not want to interrupt calculation for all other currencies
+                //throw new Exception($"Need more data to calculate RSI. Closing prices data count {closingPrices.Count} requested period {period}");
+            }
 
             decimal gainsTotal = 0;
             decimal losesTotal = 0;

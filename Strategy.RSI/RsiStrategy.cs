@@ -7,6 +7,7 @@ using Exchange.MarketUtils;
 using Exchange.Poloniex;
 using log4net;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace Strategy.RSI
 {
@@ -30,6 +31,10 @@ namespace Strategy.RSI
         private decimal _targetProfitPercentage;
         private Tuple<string, string, decimal> bestPair;
 
+        private int exchangeOperationsCheckDelay = 1000;
+        private decimal volumeTreshold = 100;
+
+
         public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger)
         {
             _exchange = exchange;
@@ -39,61 +44,94 @@ namespace Strategy.RSI
             _candlePeriod = candlePeriod;
             _logger = logger;
             _targetProfitPercentage = targetProfitPercentage;
-
             _currentBalance = startBalance;
-
-            currentState = STATE.LOOKING_FOR_OPPORTUNITY;
+            currentState = STATE.LOOKING_FOR_OPPORTUNITY;            
         }
 
-        public void Run()
-        {            
-
+        public async Task Run()
+        {
             DateTime end = DateTime.MaxValue;
-            // = new Tuple<string, string, decimal>("","", 100);
 
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {
-                bestPair = FindLowestRsiPair(end);
+                //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
+                bestPair = await FindLowestRsiPair(end);
 
                 if (bestPair.Item3 <= _buyTreshold)
                 {
+                    Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
+
                     currentState = STATE.BUYING;
-                    //buy here
+                    buyPrice = t.ask;
+                    sellPrice = buyPrice * (1 + _targetProfitPercentage);
+
+                    SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, _currentBalance);
+                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+
+                    while (! await IsBuyOrderFilled(bestPair.Item1, bestPair.Item2))
+                    {
+                        await Task.Delay(exchangeOperationsCheckDelay);
+                    }
+
+                    currentState = STATE.IN_POSITION;
+                    _logger.Debug($"{DateTime.Now} Buy order filled {bestPair.Item1} {bestPair.Item2} price {t.ask}");
                 }
             }
-            else if (currentState == STATE.BUYING)
-            {
-                //check ticker
-                Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
-                buyPrice = t.ask;
-                sellPrice = buyPrice * (1 + _targetProfitPercentage);
-                //check if we bought
-                //check if buy order is set
-                _logger.Debug($"Bought {bestPair.Item1} {bestPair.Item2} @ {buyPrice}");
 
-                currentState = STATE.IN_POSITION;
-            }
             else if (currentState == STATE.IN_POSITION)
             {
-                //sell 
-                Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
-
-                if (sellPrice <= t.bid)
-                {
-                    currentState = STATE.SELLING;
-                    decimal profit = (sellPrice / buyPrice);
-                    _logger.Debug($"Sold {bestPair.Item1} {bestPair.Item2} @ {sellPrice}, profit {sellPrice - buyPrice}");
-                    _currentBalance = _currentBalance * profit;
-                }
-            }        
-            else if (currentState == STATE.SELLING)
-            {
                 //sell
-                currentState = STATE.IN_POSITION;
+                SetSellOrder(bestPair.Item1, bestPair.Item2, sellPrice);
+                _logger.Debug($"{DateTime.Now} Sell order set {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
+                currentState = STATE.SELLING;
+
+                while (!await IsSellOrderFilled(bestPair.Item1, bestPair.Item2))
+                {
+                    await Task.Delay(exchangeOperationsCheckDelay);
+                }
+
+                _logger.Debug($"{DateTime.Now} Sell order filled {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
+                _logger.Debug($"Sold {bestPair.Item1} {bestPair.Item2} @ {sellPrice}, profit {sellPrice - buyPrice}");
+
+                _currentBalance = _currentBalance * sellPrice/buyPrice; //temporary
+
+                currentState = STATE.LOOKING_FOR_OPPORTUNITY;
             }
         }
 
-        private Tuple<string,string,decimal> FindLowestRsiPair(DateTime end)
+        private async void SetBuyOrder(string currency1, string currency2, decimal price, decimal amount)
+        {
+
+        }
+
+        //sell max
+        private async void SetSellOrder(string currency1, string currency2, decimal price)
+        {
+
+        }
+
+        private async Task<decimal> CheckAccountBalance()
+        {
+            return _currentBalance;
+        }
+
+        private async Task<bool> IsSellOrderFilled(string currency1, string currency2)
+        {
+            Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
+
+
+            if (sellPrice <= t.bid)
+                return true;
+            else
+                return false;
+        }
+
+        private async Task<bool> IsBuyOrderFilled(string currency1, string currency2)
+        {
+            return true;
+        }
+
+        private async Task<Tuple<string,string,decimal>> FindLowestRsiPair(DateTime end)
         {
             decimal lastLowestRSI = 100;
             Tuple<string, string> bestPair = new Tuple<string, string>("", "");
@@ -117,7 +155,7 @@ namespace Strategy.RSI
 
                 decimal rsi = rsiCalc.CalculateRSI(prices, _period);
 
-                if (rsi <= _buyTreshold && rsi < lastLowestRSI)
+                if (rsi < lastLowestRSI)
                 {
                     lastLowestRSI = rsi;
                     bestPair = pair;
@@ -130,6 +168,7 @@ namespace Strategy.RSI
             //buy @ current price
 
             //set sell order @ higher price
+            return new Tuple<string, string, decimal>(bestPair.Item1, bestPair.Item2, lastLowestRSI);
         }
 
     }

@@ -49,30 +49,30 @@ namespace startup
             //var kraken = new Kraken(krakenConfig, 0);
             var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
 
-            //List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>();
-            //List<string> pairs = poloniex.GetTradablePairs();
+            List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>();
+            List<string> pairs = poloniex.GetTradablePairs();
 
-            //foreach (var pair in pairs)
-            //{
-            //    var namesPair = Exchange.Poloniex.CurrenciesNamesMap.PairToCurrenciesNames(pair);
-
-            //    if (namesPair == null)
-            //        continue;
-
-            //    tradingPairs.Add(namesPair);
-            //}
-
-            //tradingPairs = tradingPairs.Where(p => p.Item1 == Currencies.Bitcoin).ToList();
-
-            List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
+            foreach (var pair in pairs)
             {
-                new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum),
-                new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Litecoin),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Ripple),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Monero)
-            };
+                var namesPair = Exchange.Poloniex.CurrenciesNamesMap.PairToCurrenciesNames(pair);
+
+                if (namesPair == null)
+                    continue;
+
+                tradingPairs.Add(namesPair);
+            }
+
+            tradingPairs = tradingPairs.Where(p => p.Item1 == Currencies.Bitcoin).ToList();
+
+            //List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
+            //{
+            //    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum),
+            //    new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin),
+            //    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash),
+            //    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Litecoin),
+            //    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Ripple),
+            //    new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Monero)
+            //};
 
 
             //decimal startBalance = 1000;
@@ -96,24 +96,24 @@ namespace startup
 
             //SctpBreakout breakoutStrategy = new SctpBreakout(poloniex, tradingPairs, historicalData, candleInterval, candlesInTimeframe, new decimal(0.05), startBalance, log);
 
-            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs,25, 14, 1800, log);
+            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs,25, 14, 1800, 0.02m, 1000, log);
 
             while(true)
             {
                 try
                 {
-                    //Task.Run(async () =>
-                    //{
-                    //    await rsiStrategy.Run();
-                    //}).GetAwaiter().GetResult();
-                    rsiStrategy.Run();
+                    Task.Run(async () =>
+                    {
+                        await rsiStrategy.Run();
+                    }).GetAwaiter().GetResult();
+                    //rsiStrategy.Run();
                 }
                 catch (Exception ex)
                 {
                     log.Debug(ex.Message);
                 }
 
-                Thread.Sleep(10 *1000);
+                Thread.Sleep(1000);
                 Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
             }
 

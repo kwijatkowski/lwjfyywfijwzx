@@ -34,7 +34,7 @@ namespace Strategy.SCTP_BREAKOUTTests
             TimeSpan analyzedTimeWindow = new TimeSpan(240, 0, 0);
             int candlesInTimeframe = (int) Math.Floor(analyzedTimeWindow.TotalSeconds / candlePeriodSeconds)/2; //take half of full window
 
-            string candlesJson = exchange.GetHistoricalData(pair.Item1, pair.Item2, DateTime.Now - analyzedTimeWindow, DateTime.Now, candlePeriodSeconds).GetAwaiter().GetResult();
+            string candlesJson = exchange.GetHistoricalData(pair, DateTime.Now - analyzedTimeWindow, DateTime.Now, candlePeriodSeconds).GetAwaiter().GetResult().Item2;
 
             List<Candle> candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
 
