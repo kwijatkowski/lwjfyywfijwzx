@@ -69,8 +69,8 @@ namespace startup
                 //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Ethereum),
                 //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin),
                 //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash),
-                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Ripple)
-                //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Monero)
+                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Ripple),
+                new Tuple<string, string>(Currencies.Bitcoin ,Currencies.Litecoin)
             };
 
 

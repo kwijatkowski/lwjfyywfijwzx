@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Exchange.MarketUtils
 {
@@ -20,13 +17,10 @@ namespace Exchange.MarketUtils
 
             for (int i = startIdx; i < closingPrices.Count; i++)
             {
-                if (i != startIdx) //skip first one
-                {
-                    if (closingPrices[i] > closingPrices[i - 1])
-                        gainsTotal += closingPrices[i] - closingPrices[i - 1];
-                    else
-                        losesTotal += closingPrices[i - 1] - closingPrices[i];
-                }
+                if (closingPrices[i] > closingPrices[i - 1])
+                    gainsTotal += closingPrices[i] - closingPrices[i - 1];
+                else
+                    losesTotal += closingPrices[i - 1] - closingPrices[i];
             }
 
             decimal avgGain = gainsTotal / period;
@@ -36,6 +30,5 @@ namespace Exchange.MarketUtils
 
             return 100 - 100 / (1 + firstRS);
         }
-
     }
 }
