@@ -23,7 +23,7 @@ namespace Exchange.MarketUtils
                 if (closingPrices[i] > closingPrices[i - 1])
                     gainsTotal += closingPrices[i] - closingPrices[i - 1];
                 else
-                    losesTotal += closingPrices[i - 1] - closingPrices[i];
+                    losesTotal += Math.Abs(closingPrices[i] - closingPrices[i - 1]);
             }
 
             decimal avgGain = gainsTotal / period;

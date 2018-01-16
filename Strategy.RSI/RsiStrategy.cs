@@ -31,22 +31,26 @@ namespace Strategy.RSI
             _logger = logger;
         }
 
-        public void Run()
-        {            
+        public async void Run()
+        {           
             decimal lastLowestRSI = 100;
             Tuple<string, string> bestPair = null;
             DateTime end = DateTime.MaxValue;
 
-            //find currency with lowest RSI and below treshold
-            foreach (var pair in _currenciesToWorkOn)
+            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
+            var tmp = new List<Task<Tuple<Tuple<string, string>, string>>>();
+
+            _currenciesToWorkOn.ForEach(pair => tmp.Add(_exchange.GetHistoricalData(pair, startDate, end, _candlePeriod)));
+
+            var allHistoricalData = await Task.WhenAll(tmp);
+           
+            foreach (var singleCrypto in allHistoricalData)
             {
-                DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
-                string candlesJson = _exchange.GetHistoricalData(pair.Item1, pair.Item2, startDate, end, _candlePeriod).GetAwaiter().GetResult();
+                var pair = singleCrypto.Item1;
+                var candlesJson = singleCrypto.Item2;
 
                 List<Candle> candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
                 List<decimal> prices = candles.Select(p => p.Close).ToList();
-
-                //foreach(var candle in candles.OrderBy(c => c.))
 
                 Exchange.MarketUtils.RSI rsiCalc = new Exchange.MarketUtils.RSI();
 
@@ -57,9 +61,11 @@ namespace Strategy.RSI
                     lastLowestRSI = rsi;
                     bestPair = pair;
                 }
-                    _logger.Debug($"Pair: {pair.Item1} {pair.Item2} rsi {rsi}");
+                _logger.Debug($"Pair: {pair.Item1} {pair.Item2} rsi {rsi}");
             }
 
+            if(bestPair != null)
+                _logger.Debug($"bestPair: {bestPair.Item1} {bestPair.Item2} rsi {lastLowestRSI}");
             //buy @ current price
 
             //set sell order @ higher price
