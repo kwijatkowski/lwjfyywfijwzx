@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Exchange.MarketUtils
 {
@@ -33,6 +30,5 @@ namespace Exchange.MarketUtils
 
             return 100 - 100 / (1 + firstRS);
         }
-
     }
 }
