@@ -54,6 +54,7 @@
     <Compile Include="OperationTypes.cs" />
     <Compile Include="OrderBook.cs" />
     <Compile Include="Profit.cs" />
+    <Compile Include="RSI.cs" />
     <Compile Include="Ticker.cs" />
     <Compile Include="Currencies.cs" />
     <Compile Include="IExchange.cs" />

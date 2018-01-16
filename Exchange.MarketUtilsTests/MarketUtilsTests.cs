@@ -26,5 +26,33 @@ using Exchange.MarketUtils;
            // OrderBook ob = new OrderBook();
             return 0;
         }
+
+        [TestCase(ExpectedResult = 48.477)]
+        public decimal CalculateRSITest()
+        {
+            //input 
+            List<decimal> closingPrices = new List<decimal>() {
+                new decimal(46.1250),
+                new decimal(47.1250),
+                new decimal(46.4375),
+                new decimal(46.9375),
+                new decimal(44.9375),
+                new decimal(44.25),
+                new decimal(44.625),
+                new decimal(45.75),
+                new decimal(47.8125),
+                new decimal(47.5625),
+                new decimal(47),
+                new decimal(44.5625),
+                new decimal(46.3125),
+                new decimal(47.6875),
+                new decimal(46.6875)
+            };
+            int period = 14;
+
+            RSI rsiCalc = new RSI();
+            decimal rsi =  rsiCalc.CalculateRSI(closingPrices, period);
+            return rsi;
+        }
     }
 }
