@@ -120,6 +120,36 @@ namespace Exchange.Poloniex
             return _tradablePairs;
         }
 
+        public async Task<decimal> GetVolumeThreshold(string currency1, string currency2)
+        {
+            string pairName = CurrenciesNamesMap.MapNamesToPair(currency1, currency2);
+            string response = _publicApiConnector.Get24hVolume().GetAwaiter().GetResult();
+            var pairsDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+            var pair = pairsDict[pairName];
+            var type = pair.GetType();
+            decimal volume = 0;
+
+            if(pair is JObject)
+            {
+                foreach(var prop in (pair as JObject))
+                {
+                    if(prop.Key.ToString().Equals(CurrenciesNamesMap.MapName(currency2), StringComparison.OrdinalIgnoreCase))
+                        volume = Convert.ToDecimal(prop.Value.ToString(), CultureInfo.InvariantCulture);
+                }
+            }
+
+            var fivePercentOfVolume = 0.1m * volume;
+
+            var book = await GetOrderbook(currency1, currency2);
+
+            var avgAsksVolume = book.asks.Average(a => a.volume);
+            var medianAskVolume = MathUtlility.Median(book.asks.Select(a => a.volume).ToList());
+            var avgTopHalf = MathUtlility.GetTopValues(book.asks.Select(a => a.volume).ToList(), book.asks.Count/2).Average();
+            //var avgBidsVolume = book.bids.Average(b => b.volume);
+
+            return avgTopHalf < fivePercentOfVolume ? avgTopHalf : fivePercentOfVolume;
+        }
+
         public Tuple<string, string> MakeValidPair(string currency1, string currency2, out bool inverted)
         {
             string pair1 = CurrenciesNamesMap.MapNamesToPair(currency1, currency2);
