@@ -50,6 +50,7 @@
     <Compile Include="Candle.cs" />
     <Compile Include="ExchangeConfig.cs" />
     <Compile Include="IOperationFeesCalculator.cs" />
+    <Compile Include="MathUtlility.cs" />
     <Compile Include="Offer.cs" />
     <Compile Include="OperationTypes.cs" />
     <Compile Include="OrderBook.cs" />

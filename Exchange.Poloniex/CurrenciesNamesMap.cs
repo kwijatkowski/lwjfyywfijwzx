@@ -355,7 +355,7 @@ namespace Exchange.Poloniex
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Kraken currency symbol</returns>
-        private static string MapName(string name)
+        public static string MapName(string name)
         {
             string symbol = string.Empty;
 

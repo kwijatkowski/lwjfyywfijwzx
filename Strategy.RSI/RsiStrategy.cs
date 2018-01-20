@@ -32,7 +32,7 @@ namespace Strategy.RSI
         private Tuple<string, string, decimal> bestPair;
 
         private int exchangeOperationsCheckDelay = 1000;
-        private decimal volumeTreshold = 100;
+        private decimal volumeTreshold;
 
 
         public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger)
@@ -56,7 +56,8 @@ namespace Strategy.RSI
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {
                 //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
-                bestPair = await FindLowestRsiPair(startDate, end);
+                bestPair = await FindLowestRsiPair(end);
+                volumeTreshold = await _exchange.GetVolumeThreshold(bestPair.Item1, bestPair.Item2);
 
                 if (bestPair.Item3 <= _buyTreshold)
                 {
@@ -66,8 +67,9 @@ namespace Strategy.RSI
                     buyPrice = t.ask;
                     sellPrice = buyPrice * (1 + _targetProfitPercentage);
 
-                    SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, _currentBalance);
-                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+                    var vThreshold = Math.Round(_currentBalance >= volumeTreshold ? volumeTreshold : _currentBalance, 8);
+                    SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, vThreshold);
+                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask} volume {vThreshold}");
 
                     while (! await IsBuyOrderFilled(bestPair.Item1, bestPair.Item2))
                     {
