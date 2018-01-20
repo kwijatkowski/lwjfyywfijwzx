@@ -51,11 +51,12 @@ namespace Strategy.RSI
         public async Task Run()
         {
             DateTime end = DateTime.MaxValue;
+            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
 
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {
                 //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
-                bestPair = await FindLowestRsiPair(end);
+                bestPair = await FindLowestRsiPair(startDate, end);
 
                 if (bestPair.Item3 <= _buyTreshold)
                 {
@@ -131,12 +132,17 @@ namespace Strategy.RSI
             return true;
         }
 
-        private async Task<Tuple<string,string,decimal>> FindLowestRsiPair(DateTime end)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start">Needed to be able to actually test it on historical data</param>
+        /// <param name="end">Needed to be able to actually test it on historical data</param>
+        /// <returns></returns>
+        private async Task<Tuple<string,string,decimal>> FindLowestRsiPair(DateTime startDate, DateTime end)
         {
-            decimal lastLowestRSI = 100;
+            decimal lastLowestRSI = 100; //rsi cannot be higher than 100
             Tuple<string, string> bestPair = new Tuple<string, string>("", "");
-
-            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
+            
             var tmp = new List<Task<Tuple<Tuple<string, string>, string>>>();
 
             _currenciesToWorkOn.ForEach(pair => tmp.Add(_exchange.GetHistoricalData(pair, startDate, end, _candlePeriod)));

@@ -120,6 +120,13 @@ namespace Exchange.Poloniex
             return _tradablePairs;
         }
 
+        public List<Tuple<string,string, decimal>> Get24hVolume()
+        {
+             string volumeDataJson = _publicApiConnector.Get24hVolume().GetAwaiter().GetResult();
+
+            return new List<Tuple<string, string, decimal>>();
+        }
+
         public Tuple<string, string> MakeValidPair(string currency1, string currency2, out bool inverted)
         {
             string pair1 = CurrenciesNamesMap.MapNamesToPair(currency1, currency2);
