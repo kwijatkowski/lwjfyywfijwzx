@@ -51,7 +51,7 @@ namespace Strategy.RSI
         public async Task Run()
         {
             DateTime end = DateTime.MaxValue;
-            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
+            //DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
 
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {

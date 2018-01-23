@@ -64,7 +64,7 @@ namespace startup
 
             tradingPairs = tradingPairs.Where(p => p.Item1 == Currencies.Bitcoin).ToList();
 
-            var volume = poloniex.Get24hVolume();
+            //var volume = poloniex.Get24hVolume();
 
             //List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
             //{
