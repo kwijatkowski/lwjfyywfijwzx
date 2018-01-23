@@ -57,7 +57,7 @@ namespace Strategy.RSI
             {
                 //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
                 //bestPair = await FindLowestRsiPair(end);
-                volumeTreshold = await _exchange.GetVolumeThreshold(bestPair.Item1, bestPair.Item2);
+                //volumeTreshold = await _exchange.GetVolumeThreshold(bestPair.Item1, bestPair.Item2);
 
                 int additionalRsiPoints = 3; // one is calculated by default, so we will get additionalRsiPoints + 1
                 DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1 + additionalRsiPoints) * _candlePeriod);
