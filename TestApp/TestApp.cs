@@ -95,8 +95,13 @@ namespace startup
             //}
 
             //SctpBreakout breakoutStrategy = new SctpBreakout(poloniex, tradingPairs, historicalData, candleInterval, candlesInTimeframe, new decimal(0.05), startBalance, log);
+            decimal buyTreshold = 22;
+            int rsiCalcPeriod = 14;
+            int candlePeriod = 1800;
+            decimal targetProfit = 0.02m;
+            decimal startBalance = 1000;
 
-            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs,25, 14, 1800, 0.02m, 1000, log);
+            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs, buyTreshold, rsiCalcPeriod, candlePeriod, targetProfit, startBalance, log);
 
             while(true)
             {

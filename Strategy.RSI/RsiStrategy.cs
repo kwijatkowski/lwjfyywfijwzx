@@ -29,7 +29,7 @@ namespace Strategy.RSI
         private decimal buyPrice;
         private decimal sellPrice;
         private decimal _targetProfitPercentage;
-        private Tuple<string, string, decimal> bestPair;
+        private Tuple<string, string> bestPair;
 
         private int exchangeOperationsCheckDelay = 1000;
         private decimal volumeTreshold = 100;
@@ -55,15 +55,61 @@ namespace Strategy.RSI
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {
                 //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
-                bestPair = await FindLowestRsiPair(end);
+                //bestPair = await FindLowestRsiPair(end);
 
-                if (bestPair.Item3 <= _buyTreshold)
+                int additionalRsiPoints = 3; // one is calculated by default, so we will get additionalRsiPoints + 1
+                DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1 + additionalRsiPoints) * _candlePeriod);
+                               
+                var pairsResults = await CalculateMultiplRsiPoints(startDate, DateTime.UtcNow);
+
+                //take the ones which have at least one which have min rsi value below buy treshold and 
+                pairsResults = pairsResults.Where(e => e.Value.Min() <= _buyTreshold &&
+                e.Value[e.Value.Count -2] == e.Value.Min() && //take ones for which second last value is the lowest value
+                e.Value[e.Value.Count -2] < e.Value[e.Value.Count -1]) //and ones for which rsi is already raising
+                    .ToDictionary( k=> k.Key, v=> v.Value);
+
+                _logger.Debug("Following pairs found:");
+
+                foreach (var pair in pairsResults)
+                {
+                    string rsiMsg = string.Empty;
+
+                    foreach (var rs in pair.Value)
+                        rsiMsg += $"{rs.ToString("#")} ";
+
+                    _logger.Debug($"Pair: {pair.Key.Item1} {pair.Key.Item2} rsi {rsiMsg}");
+                }
+
+                decimal minRsi = 100;
+
+                if (pairsResults.Any())
+                {
+                    foreach (var pair in pairsResults)
+                    {
+                        if (pair.Value.Min() < minRsi)
+                        {
+                            bestPair = pair.Key;
+                            minRsi = pair.Value.Min();
+                        }
+                    }
+                }
+                else if (pairsResults.Count == 0)
+                {
+                    bestPair = null;
+                    _logger.Debug($"No opportunity in the market ritgh now");
+                    return;
+                }
+
+                _logger.Debug($"Pair selected: {bestPair.Item1} {bestPair.Item2}");
+                
+
+                if (bestPair != null)
                 {
                     Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
 
                     currentState = STATE.BUYING;
                     buyPrice = t.ask;
-                    sellPrice = buyPrice * (1 + _targetProfitPercentage);
+                    sellPrice = Math.Round(buyPrice * (1 + _targetProfitPercentage),8); //1 sat precision
 
                     SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, _currentBalance);
                     _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask}");
@@ -169,6 +215,58 @@ namespace Strategy.RSI
 
             //set sell order @ higher price
             return new Tuple<string, string, decimal>(bestPair.Item1, bestPair.Item2, lastLowestRSI);
+        }
+
+
+        /// <summary>
+        /// looking for a pair for which rsi reached low value and is recovering
+        /// </summary>
+        /// <param name="end"></param>
+        /// <param name="additionalCandles"></param>
+        /// <returns></returns>
+        private async Task<Dictionary<Tuple<string, string>, List<decimal>>> CalculateMultiplRsiPoints(DateTime startDate, DateTime end)
+        {
+            Dictionary<Tuple<string, string>, List<decimal>> result = new Dictionary<Tuple<string, string>, List<decimal>>(); 
+
+            //if (candlesToAnalyze < _period || candlesToAnalyze < risingRsiCandles)
+            //    throw new Exception("Need more data to calculate rsi for a time period");
+
+            var tmp = new List<Task<Tuple<Tuple<string, string>, string>>>();
+
+            _currenciesToWorkOn.ForEach(pair => tmp.Add(_exchange.GetHistoricalData(pair, startDate, end, _candlePeriod)));
+
+            var allHistoricalData = await Task.WhenAll(tmp);
+
+            //analyze single currency pair
+            foreach (var singleCrypto in allHistoricalData)
+            {
+                var pair = singleCrypto.Item1;
+                var candlesJson = singleCrypto.Item2;
+
+                List<Candle> candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+                List<decimal> prices = candles.Select(p => p.Close).ToList();
+
+                Exchange.MarketUtils.RSI rsiCalc = new Exchange.MarketUtils.RSI();
+
+                //find currency for which rsi was dropping during last x periods/reached point below treschold and is recovering for y candles
+
+                //calculate rsi for range of the points
+                List<decimal> rsiSet = rsiCalc.CalcRsiForTimePeriod(prices, _period);
+
+                result.Add(singleCrypto.Item1, rsiSet);
+
+                //build the list of the results
+                //select one which have rsi < treshold and biggest rsi increase between two last points
+
+                //string rsiMsg = string.Empty;
+                //
+                //foreach (var rs in rsiSet)
+                //    rsiMsg += $"{rs.ToString("#")} ";
+                //
+                //_logger.Debug($"Pair: {pair.Item1} {pair.Item2} rsi {rsiMsg}");
+            }
+
+            return result;
         }
 
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Exchange.MarketUtils
 {
@@ -33,5 +34,33 @@ namespace Exchange.MarketUtils
 
             return 100 - 100 / (1 + firstRS);
         }
+
+        /// <summary>
+        /// Calculating rsi starting from beggining of the set, thru all candels until the end of the set.
+        /// If we have 16 candles and period set to 14 we should get two values, 3 for 17 candles etc 
+        /// </summary>
+        /// <param name="closingPrices">set of data</param>
+        /// <param name="period">period for which single rsi value is calculated</param>
+        /// <returns>list with multiple rsi values for each candle after definad period (for period set to 14 for 15th candle and so on}</returns>
+        public List<decimal> CalcRsiForTimePeriod(List<decimal> closingPrices, int period)
+        {
+            List<decimal> results = new List<decimal>();
+
+            if (closingPrices.Count < period)
+                return results;
+
+            for (int offset = 0; offset < closingPrices.Count - period; offset++)
+            {
+                List<decimal> subset = new List<decimal>();
+
+                for (int i = offset; i <= period + offset; i++)
+                    subset.Add(closingPrices[i]);
+
+                decimal rsiForSubset = CalculateRSI(subset, period);
+                results.Add(rsiForSubset);
+            }
+
+            return results; 
+        }        
     }
 }
