@@ -64,46 +64,7 @@ namespace Strategy.RSI
                                
                 var pairsResults = await CalculateMultiplRsiPoints(startDate, DateTime.UtcNow);
 
-                //take the ones which have at least one which have min rsi value below buy treshold and 
-                pairsResults = pairsResults.Where(e => e.Value.Min() <= _buyTreshold &&
-                e.Value[e.Value.Count -2] == e.Value.Min() && //take ones for which second last value is the lowest value
-                e.Value[e.Value.Count -2] < e.Value[e.Value.Count -1]) //and ones for which rsi is already raising
-                    .ToDictionary( k=> k.Key, v=> v.Value);
-
-                _logger.Debug("Following pairs found:");
-
-                foreach (var pair in pairsResults)
-                {
-                    string rsiMsg = string.Empty;
-
-                    foreach (var rs in pair.Value)
-                        rsiMsg += $"{rs.ToString("#")} ";
-
-                    _logger.Debug($"Pair: {pair.Key.Item1} {pair.Key.Item2} rsi {rsiMsg}");
-                }
-
-                decimal minRsi = 100;
-
-                if (pairsResults.Any())
-                {
-                    foreach (var pair in pairsResults)
-                    {
-                        if (pair.Value.Min() < minRsi)
-                        {
-                            bestPair = pair.Key;
-                            minRsi = pair.Value.Min();
-                        }
-                    }
-                }
-                else if (pairsResults.Count == 0)
-                {
-                    bestPair = null;
-                    _logger.Debug($"No opportunity in the market ritgh now");
-                    return;
-                }
-
-                _logger.Debug($"Pair selected: {bestPair.Item1} {bestPair.Item2}");
-                
+                var bestPair = SelectMostPromisingPair(pairsResults);
 
                 if (bestPair != null)
                 {
@@ -147,6 +108,51 @@ namespace Strategy.RSI
                 currentState = STATE.LOOKING_FOR_OPPORTUNITY;
             }
         }
+        
+        private Tuple<string, string> SelectMostPromisingPair(Dictionary<Tuple<string, string>, List<decimal>> pairsRsiResults)
+        {
+            decimal minRsi = 100;
+
+            //take the ones which have at least one which have min rsi value below buy treshold and 
+            pairsRsiResults = pairsRsiResults.Where(e => e.Value.Min() <= _buyTreshold &&
+            e.Value[e.Value.Count - 2] == e.Value.Min() && //take ones for which second last value is the lowest value
+            e.Value[e.Value.Count - 2] < e.Value[e.Value.Count - 1]) //and ones for which rsi is already raising
+                .ToDictionary(k => k.Key, v => v.Value);
+
+            _logger.Debug("Following pairs found:");
+
+            foreach (var pair in pairsRsiResults)
+            {
+                string rsiMsg = string.Empty;
+
+                foreach (var rs in pair.Value)
+                    rsiMsg += $"{rs.ToString("#")} ";
+
+                _logger.Debug($"Pair: {pair.Key.Item1} {pair.Key.Item2} rsi {rsiMsg}");
+            }
+
+            if (pairsRsiResults.Any())
+            {
+                foreach (var pair in pairsRsiResults)
+                {
+                    if (pair.Value.Min() < minRsi)
+                    {
+                        bestPair = pair.Key;
+                        minRsi = pair.Value.Min();
+                    }
+                }
+            }
+            else if (pairsRsiResults.Count == 0)
+            {
+                bestPair = null;
+                _logger.Debug($"No opportunity in the market ritgh now");
+                return bestPair;
+            }
+
+            _logger.Debug($"Pair selected: {bestPair.Item1} {bestPair.Item2}");
+
+            return bestPair;
+        }
 
         private async void SetBuyOrder(string currency1, string currency2, decimal price, decimal amount)
         {
@@ -167,7 +173,6 @@ namespace Strategy.RSI
         private async Task<bool> IsSellOrderFilled(string currency1, string currency2)
         {
             Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
-
 
             if (sellPrice <= t.bid)
                 return true;
