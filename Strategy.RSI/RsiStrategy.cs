@@ -32,7 +32,7 @@ namespace Strategy.RSI
         private Tuple<string, string> bestPair;
 
         private int exchangeOperationsCheckDelay = 1000;
-        private decimal volumeTreshold = 100;
+        private decimal volumeTreshold;
 
 
         public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger)
@@ -51,11 +51,13 @@ namespace Strategy.RSI
         public async Task Run()
         {
             DateTime end = DateTime.MaxValue;
+            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
 
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
             {
                 //implement volume treshold - take it from the poloniex public api connector public async Task<string> Get24hVolume()
                 //bestPair = await FindLowestRsiPair(end);
+                volumeTreshold = await _exchange.GetVolumeThreshold(bestPair.Item1, bestPair.Item2);
 
                 int additionalRsiPoints = 3; // one is calculated by default, so we will get additionalRsiPoints + 1
                 DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1 + additionalRsiPoints) * _candlePeriod);
@@ -111,8 +113,9 @@ namespace Strategy.RSI
                     buyPrice = t.ask;
                     sellPrice = Math.Round(buyPrice * (1 + _targetProfitPercentage),8); //1 sat precision
 
-                    SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, _currentBalance);
-                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+                    var vThreshold = Math.Round(_currentBalance >= volumeTreshold ? volumeTreshold : _currentBalance, 8);
+                    SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, vThreshold);
+                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask} volume {vThreshold}");
 
                     while (! await IsBuyOrderFilled(bestPair.Item1, bestPair.Item2))
                     {
@@ -177,12 +180,17 @@ namespace Strategy.RSI
             return true;
         }
 
-        private async Task<Tuple<string,string,decimal>> FindLowestRsiPair(DateTime end)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start">Needed to be able to actually test it on historical data</param>
+        /// <param name="end">Needed to be able to actually test it on historical data</param>
+        /// <returns></returns>
+        private async Task<Tuple<string,string,decimal>> FindLowestRsiPair(DateTime startDate, DateTime end)
         {
-            decimal lastLowestRSI = 100;
+            decimal lastLowestRSI = 100; //rsi cannot be higher than 100
             Tuple<string, string> bestPair = new Tuple<string, string>("", "");
-
-            DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
+            
             var tmp = new List<Task<Tuple<Tuple<string, string>, string>>>();
 
             _currenciesToWorkOn.ForEach(pair => tmp.Add(_exchange.GetHistoricalData(pair, startDate, end, _candlePeriod)));
