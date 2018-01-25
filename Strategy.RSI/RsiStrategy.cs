@@ -131,7 +131,8 @@ namespace Strategy.RSI
             decimal minRsi = 100;
 
             //take the ones which have at least one which have min rsi value below buy treshold and 
-            pairsRsiResults = pairsRsiResults.Where(e => e.Value.Min() <= _buyTreshold &&
+            pairsRsiResults = pairsRsiResults.Where(e => e.Value != null && e.Value.Count >= 2 &&
+            e.Value.Min() <= _buyTreshold &&
             e.Value[e.Value.Count - 2] == e.Value.Min() && //take ones for which second last value is the lowest value
             e.Value[e.Value.Count - 2] < e.Value[e.Value.Count - 1]) //and ones for which rsi is already raising
                 .ToDictionary(k => k.Key, v => v.Value);

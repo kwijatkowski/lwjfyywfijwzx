@@ -50,7 +50,7 @@ namespace Exchange.MarketUtils.Mock
             {
                 foreach(var cur in staticDicitionary)
                 {
-                    if (pair.Equals(cur.Key, StringComparison.OrdinalIgnoreCase) && cur.Value != null && cur.Value.Count > 0)
+                    if (!pair.Equals(cur.Key, StringComparison.OrdinalIgnoreCase) && cur.Value != null && cur.Value.Count > 0)
                         cur.Value.RemoveAt(0);
                 }
 
