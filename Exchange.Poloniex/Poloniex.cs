@@ -40,7 +40,7 @@ namespace Exchange.Poloniex
             return "Poloniex";
         }
 
-        public async Task<Ticker> GetTicker(string currency1, string currency2)
+        public async virtual Task<Ticker> GetTicker(string currency1, string currency2)
         {
             bool inverted = false;
             Tuple<string, string> orderedPair = MakeValidPair(currency1, currency2, out inverted);
@@ -213,7 +213,7 @@ namespace Exchange.Poloniex
         /// <param name="end">now is 9999999999 pass DateTime.MaxValue if you want recent data</param>
         /// <param name="periodSeconds"> valid values are 300, 900, 1800, 7200, 14400, and 86400</param>
         /// <returns></returns>
-        public async Task<Tuple<Tuple<string, string>, string>> GetHistoricalData(Tuple<string, string> cryptoPair, DateTime start, DateTime end, int periodSeconds)
+        public async virtual Task<Tuple<Tuple<string, string>, string>> GetHistoricalData(Tuple<string, string> cryptoPair, DateTime start, DateTime end, int periodSeconds)
         {
             long startUnix = UnixTimestamp.ToUnixTimestamp(start);
             long endUnix = end == DateTime.MaxValue ? 9999999999 : UnixTimestamp.ToUnixTimestamp(end);

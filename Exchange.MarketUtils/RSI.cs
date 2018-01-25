@@ -30,7 +30,7 @@ namespace Exchange.MarketUtils
             decimal avgGain = gainsTotal / period;
             decimal avgLoss = losesTotal / period;
 
-            decimal firstRS = avgGain / avgLoss;
+            decimal firstRS = avgLoss > 0 ? (avgGain / avgLoss) : 0;
 
             return 100 - 100 / (1 + firstRS);
         }

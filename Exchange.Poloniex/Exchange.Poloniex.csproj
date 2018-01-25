@@ -51,6 +51,7 @@
     <Compile Include="Poloniex.cs" />
     <Compile Include="PoloniexCurrenciesInfo.cs" />
     <Compile Include="PoloniexFees.cs" />
+    <Compile Include="PoloniexMock.cs" />
     <Compile Include="PoloniexOrderBook.cs" />
     <Compile Include="PoloniexTicker.cs" />
     <Compile Include="PublicApiConnector.cs" />

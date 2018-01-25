@@ -8,6 +8,7 @@ using Exchange.Poloniex;
 using log4net;
 using Newtonsoft.Json;
 using System.Threading;
+using Exchange.MarketUtils.Mock;
 
 namespace Strategy.RSI
 {
@@ -25,7 +26,6 @@ namespace Strategy.RSI
 
         private decimal _currentBalance;
 
-
         private decimal buyPrice;
         private decimal sellPrice;
         private decimal _targetProfitPercentage;
@@ -34,6 +34,10 @@ namespace Strategy.RSI
         private int exchangeOperationsCheckDelay = 1000;
         private decimal volumeTreshold;
 
+
+        //for test history 
+        public LinkedList<Trade> tradeBook = new LinkedList<Trade>();
+        public int trick = 0;
 
         public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger)
         {
@@ -65,7 +69,8 @@ namespace Strategy.RSI
                 var pairsResults = await CalculateMultiplRsiPoints(startDate, DateTime.UtcNow);
 
                 //take the ones which have at least one which have min rsi value below buy treshold and 
-                pairsResults = pairsResults.Where(e => e.Value.Min() <= _buyTreshold &&
+                pairsResults = pairsResults.Where(e => e.Value != null && e.Value.Count > 2 &&
+                e.Value.Min() <= _buyTreshold &&
                 e.Value[e.Value.Count -2] == e.Value.Min() && //take ones for which second last value is the lowest value
                 e.Value[e.Value.Count -2] < e.Value[e.Value.Count -1]) //and ones for which rsi is already raising
                     .ToDictionary( k=> k.Key, v=> v.Value);
@@ -124,6 +129,14 @@ namespace Strategy.RSI
 
                     currentState = STATE.IN_POSITION;
                     _logger.Debug($"{DateTime.Now} Buy order filled {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+                    tradeBook.AddLast(new Trade
+                    {
+                        Date = DateTime.Now,
+                        Amount = vThreshold,
+                        BuyPrice = t.ask,
+                        Curr1 = bestPair.Item1,
+                        Curr2 = bestPair.Item2
+                    });
                 }
             }
 
@@ -136,8 +149,13 @@ namespace Strategy.RSI
 
                 while (!await IsSellOrderFilled(bestPair.Item1, bestPair.Item2))
                 {
-                    await Task.Delay(exchangeOperationsCheckDelay);
+                    //todo: odkomentować delay
+                    //await Task.Delay(exchangeOperationsCheckDelay);
                 }
+
+                tradeBook.Last().SellPrice = sellPrice;
+                tradeBook.Last().NumberOfCandles = GetHistoricalDataMock.NumberOfCandles;
+                GetHistoricalDataMock.LastPair = null;
 
                 _logger.Debug($"{DateTime.Now} Sell order filled {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
                 _logger.Debug($"Sold {bestPair.Item1} {bestPair.Item2} @ {sellPrice}, profit {sellPrice - buyPrice}");
@@ -163,16 +181,14 @@ namespace Strategy.RSI
         {
             return _currentBalance;
         }
-
+        
         private async Task<bool> IsSellOrderFilled(string currency1, string currency2)
         {
             Ticker t = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult();
-
-
-            if (sellPrice <= t.bid)
-                return true;
-            else
-                return false;
+           /* if (t.bid == int.MinValue)
+                ++trick;*/
+            //todo: skasować warunek z int.MinValue -> tylko potrzebne dla danych historycznych
+            return sellPrice <= t.bid || t.bid == int.MinValue;
         }
 
         private async Task<bool> IsBuyOrderFilled(string currency1, string currency2)

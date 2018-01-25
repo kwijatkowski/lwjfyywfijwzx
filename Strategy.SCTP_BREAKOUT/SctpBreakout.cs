@@ -171,7 +171,7 @@ namespace Strategy.SCTP_BREAKOUT
             var close = tickers.Last().last;
             var low = tickers.Min(t => t.last);
 
-            return new Candle(open, high, close, low);
+            return new Candle(open, high, close, low, UnixTimestamp.ToUnixTimestamp(System.DateTime.UtcNow));
         }
 
         public bool ShouldBuy(MarketToProcess market, Ticker t)

@@ -103,7 +103,8 @@ namespace startup
             decimal targetProfit = 0.02m;
             decimal startBalance = 1000;
 
-            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs, buyTreshold, rsiCalcPeriod, candlePeriod, targetProfit, startBalance, log);
+            var poloniexMock = new PoloniexMock("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
+            RsiStrategy rsiStrategy = new RsiStrategy(poloniexMock, tradingPairs, buyTreshold, rsiCalcPeriod, candlePeriod, targetProfit, startBalance, log);
 
             while(true)
             {
@@ -119,8 +120,20 @@ namespace startup
                 {
                     log.Debug(ex.Message);
                 }
+                var test = rsiStrategy.tradeBook;
 
-                Thread.Sleep(1000);
+
+                //using (System.IO.StreamWriter file =
+                //    new System.IO.StreamWriter(@"C:\Temp\output.txt"))
+                //{
+                //    foreach (var trade in test)
+                //    {
+                //        file.WriteLine($"{trade.Curr1}_{trade.Curr2};{trade.BuyPrice};{trade.SellPrice};{trade.NumberOfCandles}");
+                //    }
+                //}
+
+                //Thread.Sleep(10);
+                //Console.ReadKey();
                 Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
             }
 
