@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Strategy.RSI", "Strategy.RS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exchange.Mock", "Exchange.Mock\Exchange.Mock.csproj", "{CF06D8D4-AA61-4C67-9F12-048E2F3A3294}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Strategy.DailyChanges", "Strategy.DailyChanges\Strategy.DailyChanges.csproj", "{3AB883B8-2910-431C-B5BF-E1A77388B9E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{CF06D8D4-AA61-4C67-9F12-048E2F3A3294}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF06D8D4-AA61-4C67-9F12-048E2F3A3294}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF06D8D4-AA61-4C67-9F12-048E2F3A3294}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AB883B8-2910-431C-B5BF-E1A77388B9E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AB883B8-2910-431C-B5BF-E1A77388B9E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AB883B8-2910-431C-B5BF-E1A77388B9E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AB883B8-2910-431C-B5BF-E1A77388B9E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,6 +129,7 @@ Global
 		{E97D4D26-92AD-429D-B069-0701697C43DE} = {1ABFFF86-90AE-4262-9374-613417602574}
 		{245C0569-2BA2-4CC1-8F2C-B1C53927AD1C} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
 		{CF06D8D4-AA61-4C67-9F12-048E2F3A3294} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
+		{3AB883B8-2910-431C-B5BF-E1A77388B9E6} = {88D14B9B-613B-457D-8DF9-C3C8E635E571}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {22395B8D-7265-41E5-8AE7-00BF3BCED312}
