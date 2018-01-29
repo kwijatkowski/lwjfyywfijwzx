@@ -15,7 +15,7 @@ namespace Exchange.Poloniex
     public class Poloniex : IExchange
     {
         private string _publicApiURL;
-        private PublicApiConnector _publicApiConnector;
+        private IPublicApiConnector _publicApiConnector;
 
         private static List<string> _tradablePairs;
         private static string _feesJson;
@@ -27,10 +27,15 @@ namespace Exchange.Poloniex
         /// <param name="baseAddress">Public api address</param>
         /// <param name="feesJson">json containing fees schedule</param>
         /// <param name="accountMonthlyVolume">Currency here is BTC</param>
-        public Poloniex(string baseAddress, string feesJson, decimal accountMonthlyVolume)
+        public Poloniex(string baseAddress, string feesJson, decimal accountMonthlyVolume, IPublicApiConnector publicApiConnector = null)
         {
             _publicApiURL = baseAddress;
-            _publicApiConnector = new PublicApiConnector(_publicApiURL);
+
+            if (publicApiConnector == null)
+                _publicApiConnector = new PublicApiConnector(_publicApiURL);
+            else
+                _publicApiConnector = publicApiConnector;
+
             _feesJson = feesJson;
             _monthlyVolume = accountMonthlyVolume;
         }
@@ -48,29 +53,29 @@ namespace Exchange.Poloniex
             if (orderedPair == null)
                 return null;
 
-            var allCurrenciesTicker = await _publicApiConnector.GetTicker();
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, PoloniexTicker>>(allCurrenciesTicker);
+            var allCurrenciesTicker = await _publicApiConnector.GetTicker(currency1, currency2);
+            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, Ticker>>(allCurrenciesTicker);
 
-            PoloniexTicker ticker = null;
+            Ticker ticker = null;
 
             string pair = CurrenciesNamesMap.MapNamesToPair(orderedPair.Item1, orderedPair.Item2);
 
             if (!deserialized.TryGetValue(pair, out ticker))
                 throw new Exception($"Unable to get ticker for {currency1} and {currency2} at {GetName()}");
 
-            Ticker t = new Ticker()
-            {
-                ask = ticker.lowestAsk,
-                bid = ticker.highestBid,
-                last = ticker.last,
-                min = ticker.low24hr,
-                max = ticker.high24hr
-            };
+            //Ticker t = new Ticker()
+            //{
+            //    ask = ticker.lowestAsk,
+            //    bid = ticker.highestBid,
+            //    last = ticker.last,
+            //    min = ticker.low24hr,
+            //    max = ticker.high24hr
+            //};
 
-            if (inverted)
-                return t.Invert(t);
-            else
-                return t;
+            //if (inverted)
+            //    return t.Invert(t);
+            //else
+                return ticker;
         }
 
         public async Task<OrderBook> GetOrderbook(string currency1, string currency2, int? limit = null)

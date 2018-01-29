@@ -8,12 +8,14 @@ using Exchange.Poloniex;
 using log4net;
 using Newtonsoft.Json;
 using System.Threading;
-using Exchange.MarketUtils.Mock;
+using Exchange.Mock;
 
 namespace Strategy.RSI
 {
     public class RsiStrategy
     {
+        private ITimeProvider _timeProvider;
+
         private enum STATE { LOOKING_FOR_OPPORTUNITY, BUYING, IN_POSITION, SELLING }
         private Queue<string> _alreadyTraded;
         private Poloniex _exchange;
@@ -29,18 +31,20 @@ namespace Strategy.RSI
         private decimal buyPrice;
         private decimal sellPrice;
         private decimal _targetProfitPercentage;
-        private Tuple<string, string> bestPair;
+        private Tuple<string, string> bestPair;       
 
-        private int exchangeOperationsCheckDelay = 1000;
         private decimal volumeTreshold;
 
+        private decimal stopLossPrice;
+        private DateTime failTime;
 
         //for test history 
         public LinkedList<Trade> tradeBook = new LinkedList<Trade>();
         public int trick = 0;
 
-        public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger)
+        public RsiStrategy(Poloniex exchange, List<Tuple<string,string>> currenciesToWorkOn, decimal rsiBuyTreshold, int period, int candlePeriod, decimal targetProfitPercentage, decimal startBalance, ILog logger, ITimeProvider timeProvider)
         {
+            _timeProvider = timeProvider;
             _exchange = exchange;
             _currenciesToWorkOn = currenciesToWorkOn;
             _buyTreshold = rsiBuyTreshold;
@@ -53,8 +57,7 @@ namespace Strategy.RSI
         }
 
         public async Task Run()
-        {
-            DateTime end = DateTime.MaxValue;
+        {            
             //DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1) * _candlePeriod);
 
             if (STATE.LOOKING_FOR_OPPORTUNITY == currentState)
@@ -63,12 +66,12 @@ namespace Strategy.RSI
                 //bestPair = await FindLowestRsiPair(end);
                 //volumeTreshold = await _exchange.GetVolumeThreshold(bestPair.Item1, bestPair.Item2);
 
-                int additionalRsiPoints = 3; // one is calculated by default, so we will get additionalRsiPoints + 1
-                DateTime startDate = DateTime.UtcNow - new TimeSpan(0, 0, (_period + 1 + additionalRsiPoints) * _candlePeriod);
+                int additionalRsiPoints = 4; // one is calculated by default, so we will get additionalRsiPoints + 1
+                DateTime startDate = _timeProvider.Now() - new TimeSpan(0, 0, (_period + 1 + additionalRsiPoints) * _candlePeriod);
                                
-                var pairsResults = await CalculateMultiplRsiPoints(startDate, DateTime.UtcNow);
+                var pairsResults = await CalculateMultiplRsiPoints(startDate, _timeProvider.Now());
 
-                var bestPair = SelectMostPromisingPair(pairsResults);
+            var bestPair = SelectMostPromisingPair(pairsResults);
 
                 if (bestPair != null)
                 {
@@ -80,50 +83,77 @@ namespace Strategy.RSI
 
                     var vThreshold = Math.Round(_currentBalance >= volumeTreshold ? volumeTreshold : _currentBalance, 8);
                     SetBuyOrder(bestPair.Item1, bestPair.Item2, t.ask, vThreshold);
-                    _logger.Debug($"{DateTime.Now} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask} volume {vThreshold}");
+                    _logger.Debug($"{_timeProvider.Now()} Buy order set {bestPair.Item1} {bestPair.Item2} price {t.ask} volume {vThreshold}");
 
-                    while (! await IsBuyOrderFilled(bestPair.Item1, bestPair.Item2))
+                    failTime = _timeProvider.Now() + new TimeSpan(48, 0, 0);
+                    stopLossPrice = buyPrice * 0.1m;
+
+                    if (! await IsBuyOrderFilled(bestPair.Item1, bestPair.Item2))
                     {
-                        await Task.Delay(exchangeOperationsCheckDelay);
+                        //  await Task.Delay(exchangeOperationsCheckDelay);
+                        return;
                     }
 
                     currentState = STATE.IN_POSITION;
-                    _logger.Debug($"{DateTime.Now} Buy order filled {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+                    _logger.Debug($"{_timeProvider.Now()} Buy order filled {bestPair.Item1} {bestPair.Item2} price {t.ask}");
+
                     tradeBook.AddLast(new Trade
                     {
-                        Date = DateTime.Now,
+                        Date = _timeProvider.Now(),
                         Amount = vThreshold,
                         BuyPrice = t.ask,
                         Curr1 = bestPair.Item1,
                         Curr2 = bestPair.Item2
                     });
+
+                    //sell
+                    SetSellOrder(bestPair.Item1, bestPair.Item2, sellPrice);
+                    _logger.Debug($"{_timeProvider.Now()} Sell order set {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
+                    //currentState = STATE.SELLING;
                 }
             }
 
             else if (currentState == STATE.IN_POSITION)
             {
-                //sell
-                SetSellOrder(bestPair.Item1, bestPair.Item2, sellPrice);
-                _logger.Debug($"{DateTime.Now} Sell order set {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
-                currentState = STATE.SELLING;
+                decimal tickerPrice = _exchange.GetTicker(bestPair.Item1, bestPair.Item2).GetAwaiter().GetResult().last;
 
-                while (!await IsSellOrderFilled(bestPair.Item1, bestPair.Item2))
+                if (!NeedToSell(bestPair.Item1, bestPair.Item2, tickerPrice))
                 {
-                    //todo: odkomentować delay
-                    //await Task.Delay(exchangeOperationsCheckDelay);
+                    return;
                 }
+                else
+                {
+                    tradeBook.Last().SellPrice = tickerPrice;
+                    //tradeBook.Last().NumberOfCandles = GetHistoricalDataMock.NumberOfCandles;
+                    //GetHistoricalDataMock.LastPair = null;
 
-                tradeBook.Last().SellPrice = sellPrice;
-                tradeBook.Last().NumberOfCandles = GetHistoricalDataMock.NumberOfCandles;
-                GetHistoricalDataMock.LastPair = null;
+                    _logger.Debug($"{_timeProvider.Now()} Sell order filled {bestPair.Item1} {bestPair.Item2} price {tickerPrice}");
+                    _logger.Debug($"Sold {bestPair.Item1} {bestPair.Item2} @ {tickerPrice}, profit {tickerPrice - buyPrice}");
 
-                _logger.Debug($"{DateTime.Now} Sell order filled {bestPair.Item1} {bestPair.Item2} price {sellPrice}");
-                _logger.Debug($"Sold {bestPair.Item1} {bestPair.Item2} @ {sellPrice}, profit {sellPrice - buyPrice}");
+                    _currentBalance = _currentBalance * tickerPrice / buyPrice; //temporary
 
-                _currentBalance = _currentBalance * sellPrice/buyPrice; //temporary
-
-                currentState = STATE.LOOKING_FOR_OPPORTUNITY;
+                    currentState = STATE.LOOKING_FOR_OPPORTUNITY;
+                }
             }
+        }
+
+        private bool NeedToSell(string currency1, string currency2, decimal tickerPrice)
+        {
+            if (tickerPrice > sellPrice)
+                return true;
+            else if (_timeProvider.Now() > failTime)
+            {
+                _logger.Debug($"{_timeProvider.Now()} time elapsed");
+                return true;
+            }
+            else if (tickerPrice < stopLossPrice)
+            {
+                _logger.Debug($"{_timeProvider.Now()} stop loss hit");
+                return true;
+            }
+            else
+                return false;
+            
         }
         
         private Tuple<string, string> SelectMostPromisingPair(Dictionary<Tuple<string, string>, List<decimal>> pairsRsiResults)
@@ -133,24 +163,27 @@ namespace Strategy.RSI
             //take the ones which have at least one which have min rsi value below buy treshold and 
             pairsRsiResults = pairsRsiResults.Where(e => e.Value != null && e.Value.Count >= 2 &&
             e.Value.Min() <= _buyTreshold &&
-            e.Value[e.Value.Count - 2] == e.Value.Min() && //take ones for which second last value is the lowest value
-            e.Value[e.Value.Count - 2] < e.Value[e.Value.Count - 1]) //and ones for which rsi is already raising
+            e.Value[e.Value.Count - 4] == e.Value.Min() && //take ones for which second last value is the lowest value
+            e.Value[e.Value.Count - 4] < e.Value[e.Value.Count - 3] &&
+            e.Value[e.Value.Count - 3] < e.Value[e.Value.Count - 2] &&
+            e.Value[e.Value.Count - 2] < e.Value[e.Value.Count - 1]
+            ) //and ones for which rsi is already raising
                 .ToDictionary(k => k.Key, v => v.Value);
-
-            _logger.Debug("Following pairs found:");
-
-            foreach (var pair in pairsRsiResults)
-            {
-                string rsiMsg = string.Empty;
-
-                foreach (var rs in pair.Value)
-                    rsiMsg += $"{rs.ToString("#")} ";
-
-                _logger.Debug($"Pair: {pair.Key.Item1} {pair.Key.Item2} rsi {rsiMsg}");
-            }
 
             if (pairsRsiResults.Any())
             {
+                _logger.Debug($"{_timeProvider.Now().ToString()} Following pairs found:");
+
+                foreach (var pair in pairsRsiResults)
+                {
+                    string rsiMsg = string.Empty;
+
+                    foreach (var rs in pair.Value)
+                        rsiMsg += $"{rs.ToString("#")} ";
+
+                    _logger.Debug($"{_timeProvider.Now().ToString()} Pair: {pair.Key.Item1} {pair.Key.Item2} rsi {rsiMsg}");
+                }
+
                 foreach (var pair in pairsRsiResults)
                 {
                     if (pair.Value.Min() < minRsi)
@@ -163,7 +196,7 @@ namespace Strategy.RSI
             else if (pairsRsiResults.Count == 0)
             {
                 bestPair = null;
-                _logger.Debug($"No opportunity in the market ritgh now");
+                //_logger.Debug($"No opportunity in the market ritgh now");
                 return bestPair;
             }
 
@@ -297,6 +330,11 @@ namespace Strategy.RSI
             }
 
             return result;
+        }
+
+        public decimal CurrentBalance()
+        {
+            return _currentBalance;
         }
 
     }

@@ -6,10 +6,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Exchange.MarketUtils;
 
 namespace Exchange.Poloniex
 {
-    public class PublicApiConnector
+    public class PublicApiConnector : IPublicApiConnector
     {
         //documentation
         //https://m.poloniex.com/support/api/
@@ -22,7 +23,7 @@ namespace Exchange.Poloniex
         }
 
         //Appropriate labels for these data are, in order: currencyPair, last, lowestAsk, highestBid, percentChange, baseVolume, quoteVolume, isFrozen, 24hrHigh, 24hrLow
-        public async Task<string> GetTicker()
+        public async Task<string> GetTicker(string currency1 = null, string currency2 = null)
         {
             string relative = string.Empty;
             Dictionary<string, string> parameters = new Dictionary<string, string>()

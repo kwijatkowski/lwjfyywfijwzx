@@ -342,7 +342,7 @@ namespace Exchange.Poloniex
                 return null;
         }
 
-        private static string SymbolToName(string symbol)
+        public static string SymbolToName(string symbol)
         {           
             if (MapCrypto.Any(e => e.Value == symbol))
                 return MapCrypto.First(e => e.Value == symbol).Key;

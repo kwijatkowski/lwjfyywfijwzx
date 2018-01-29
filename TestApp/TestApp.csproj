@@ -72,6 +72,10 @@
       <Project>{8a4b69a0-43f9-4e55-ba5d-a7a7fc73513c}</Project>
       <Name>Exchange.MarketUtils</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Exchange.Mock\Exchange.Mock.csproj">
+      <Project>{cf06d8d4-aa61-4c67-9f12-048e2f3a3294}</Project>
+      <Name>Exchange.Mock</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Exchange.Poloniex\Exchange.Poloniex.csproj">
       <Project>{84c9edc8-f9cf-4c6b-80a3-b84983ab24b2}</Project>
       <Name>Exchange.Poloniex</Name>

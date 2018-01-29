@@ -15,6 +15,7 @@ using log4net;
 using log4net.Core;
 using Strategy.SCTP_BREAKOUT;
 using Strategy.RSI;
+using Exchange.Mock;
 
 namespace startup
 {
@@ -40,16 +41,17 @@ namespace startup
         private static void Main(string[] args)
         {
             string logFilePath = @"C:\temp\logTestApp.txt";
+            string historicalDataDir = @"C:\temp\test";
+            string volumeFile = @"C:\temp\test\24h\24hVolume.json";
             ILog log = new ConsoleLogger(logFilePath);
 
             string x = string.Empty;
 
-            //var krakenConfig = new ExchangeConfig();
-            //krakenConfig.Load(krakenConfigPath);
-            //var kraken = new Kraken(krakenConfig, 0);
-            var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
-
             List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>();
+
+            TimeProvider timeProvider = new TimeProvider(new DateTime(2017, 01, 02, 0, 0, 0));
+            var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0,
+                new PublicApiConnectorMock(historicalDataDir, volumeFile, timeProvider));
             List<string> pairs = poloniex.GetTradablePairs();
 
             foreach (var pair in pairs)
@@ -64,6 +66,7 @@ namespace startup
 
             tradingPairs = tradingPairs.Where(p => p.Item1 == Currencies.Bitcoin).ToList();
 
+            #region commented
             //var volume = poloniex.Get24hVolume();
 
             //List<Tuple<string, string>> tradingPairs = new List<Tuple<string, string>>()
@@ -97,17 +100,22 @@ namespace startup
             //}
 
             //SctpBreakout breakoutStrategy = new SctpBreakout(poloniex, tradingPairs, historicalData, candleInterval, candlesInTimeframe, new decimal(0.05), startBalance, log);
+
+            #endregion
             decimal buyTreshold = 22;
             int rsiCalcPeriod = 14;
             int candlePeriod = 1800;
-            decimal targetProfit = 0.02m;
-            decimal startBalance = 1000;
+            decimal targetProfit = 0.015m;
+            decimal startBalance = 1;
 
-            var poloniexMock = new PoloniexMock("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
-            RsiStrategy rsiStrategy = new RsiStrategy(poloniexMock, tradingPairs, buyTreshold, rsiCalcPeriod, candlePeriod, targetProfit, startBalance, log);
+            //var poloniexMock = new PoloniexMock("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
+            //var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPoloniex), 0);
+
+            RsiStrategy rsiStrategy = new RsiStrategy(poloniex, tradingPairs, buyTreshold, rsiCalcPeriod, candlePeriod, targetProfit, startBalance, log, timeProvider);
 
             while(true)
             {
+                timeProvider.ShiftBy(new TimeSpan(0, 30, 0));
                 try
                 {
                     Task.Run(async () =>
@@ -119,8 +127,11 @@ namespace startup
                 catch (Exception ex)
                 {
                     log.Debug(ex.Message);
+                    break;
                 }
-                var test = rsiStrategy.tradeBook;
+
+
+                //var test = rsiStrategy.tradeBook;
 
 
                 //using (System.IO.StreamWriter file =
@@ -134,62 +145,12 @@ namespace startup
 
                 //Thread.Sleep(10);
                 //Console.ReadKey();
-                Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
+                //Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
             }
 
-            #region old
-            //while (x != "x")
-            //{
-            //    Task.Run(async () =>
-            //    {
-            //        List<string> commonCurrencies = CommonCurrencies(new List<Dictionary<string, string>>() { Exchange.Kraken.CurrenciesNamesMap.MapCrypto, Exchange.BitBay.CurrenciesNamesMap.MapCrypto });
-
-            //        List<Tuple<string, string, decimal>> tradingPairs = new List<Tuple<string, string, decimal>>()
-            //        {
-            //        new Tuple<string, string,decimal>(Currencies.Bitcoin , Currencies.Ethereum, new decimal(0.5)  )
-            //        //new Tuple<string, string>(Currencies.Bitcoin , Currencies.Litecoin   ),
-            //        //new Tuple<string, string>(Currencies.Bitcoin ,Currencies.BitcoinCash ),
-
-            //        //new Tuple<string, string, decimal>(Currencies.USD , Currencies.Ethereum, new decimal(1000) ),
-            //            //new Tuple<string, string>(Currencies.PLN , Currencies.Bitcoin   )
-            //        };
-
-            //        decimal startCurrencyVolume = new decimal(0.04);
-
-            //        var bbConfig = new ExchangeConfig();
-            //        bbConfig.Load(bitbayConfigPath);
-
-            //        var krakenConfig = new ExchangeConfig();
-            //        krakenConfig.Load(krakenConfigPath);
-
-
-            //        var bitbay = new BitBay(bbConfig, 0, File.ReadAllText(feesJsonPath));
-            //        var kraken = new Kraken(krakenConfig, 0);
-            //        var poloniex = new Poloniex("https://poloniex.com/public", File.ReadAllText(feesJsonPath), 0);
-
-            //        List<IExchange> exchanges = new List<IExchange>() {
-            //        bitbay,kraken
-            //            //new Poloniex("https://poloniex.com/public"),
-            //        };
-
-            //        ArbitrageStrategy strategy = new ArbitrageStrategy(3, new decimal(0.3));
-
-            //        foreach (var pair in tradingPairs)
-            //        {
-            //            //Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, kraken, pair.Item3);
-            //            //Console.WriteLine($"{bitbay.GetName()} -> {kraken.GetName()} pair {pair.Item1} {pair.Item2} profit: {Math.Round(profit.absoluteValue,8)} [{profit.currency}] or {profit.percent.ToString("F")}%");
-
-            //            Profit profit = await strategy.CalculateSingleTransferProfitForPairAndExchange(pair.Item1, pair.Item2, bitbay, poloniex, pair.Item3);
-            //            Console.WriteLine($"{bitbay.GetName()} -> {poloniex.GetName()} pair {pair.Item1} {pair.Item2} profit: {Math.Round(profit.absoluteValue, 8)} [{profit.currency}] or {profit.percent.ToString("F")}%");
-            //        }
-            //    }).GetAwaiter().GetResult();
-
-            //    Thread.Sleep(3000);
-            //    Console.WriteLine(" ------------------------------------------------------------------------------------------- ");
-            //}
-            #endregion           
-
+            Console.WriteLine($"{timeProvider.Now().ToString()} Final balance {rsiStrategy.CurrentBalance()}");
             Console.WriteLine("Finished...");
+            Console.ReadLine();
         }
 
         public static async void GetTickersAndCalculatePriceDifferences(List<IExchange> exchanges, List<string> commonCurrencies, string currency2)
