@@ -92,12 +92,14 @@ namespace Strategy.DailyChanges
                 RsiSetsForSelectedCurrencies = await CalculateMultiplRsiPoints(shorterTermDataStart, shorterTermDataEnd, pairsForFurtherProcessing, _shorterCandlePeriod, _periodsToTakeToCalcRsi);
 
                 //check trend
+                var pairsWithStrength = GetPairsWithPositiveStrength(RsiSetsForSelectedCurrencies);
+
                 //get 24h low and 24h high
                 //check lower/upper half
-                RsiSetsForSelectedCurrencies = CheckTrendAndFilterPairs(RsiSetsForSelectedCurrencies);
+                bestPair = await SelectBestPair(pairsWithStrength);
 
                 //buy and set sell order
-                bestPair = SelectBestPair(RsiSetsForSelectedCurrencies);
+                //bestPair = SelectBestPair(RsiSetsForSelectedCurrencies);
 
                 if (bestPair != null)
                 {
@@ -127,9 +129,10 @@ namespace Strategy.DailyChanges
             }
         }
 
-            List<Tuple<string,string>> SelectPairsBasedOnRsiData(Dictionary<Tuple<string,string>,decimal> allPairsRsiDataLongerTerm)
+            List<Tuple<string,string>> SelectPairsBasedOnRsiData(Dictionary<Tuple<string,string>,decimal> allPairsRsiDataLongerTerm, int limiter=20)
         {
-            return new List<Tuple<string, string>>();
+            //select n lowets RSI
+            return allPairsRsiDataLongerTerm.Where(kp => kp.Value <= _buyTreshold).OrderBy(kp => kp.Value).Take(limiter).Select(kp => kp.Key).ToList();
         }
 
         /// <summary>
@@ -171,25 +174,57 @@ namespace Strategy.DailyChanges
             return result;
         }
 
-        private Dictionary<Tuple<string, string>, List<decimal>> CheckTrendAndFilterPairs(Dictionary<Tuple<string, string>, List<decimal>> input)
+        private Dictionary<Tuple<string, string>, decimal> GetPairsWithPositiveStrength(Dictionary<Tuple<string, string>, List<decimal>> input)
         {
             //todo: check trend and return only pairs which are ok
+            var pairsWithStrength = new Dictionary<Tuple<string, string>, decimal>();
 
-            return input;
+            foreach (var pair in input)
+            {
+                decimal pairStrength = 0;
+
+                if (pair.Value.Count > 2)
+                {
+                    for (int i = 0; i < pair.Value.Count; i+=2)
+                    {
+                        if(pair.Value.Count > i + 1)
+                            pairStrength = pairStrength + (pair.Value[i] - pair.Value[i + 1]);
+                    }
+                }
+                pairsWithStrength.Add(pair.Key, pairStrength);
+            }
+
+            return pairsWithStrength.Where(kp => kp.Value >= 0).ToDictionary(kp => kp.Key, kp => kp.Value);
         }
 
-
-        private Tuple<string,string> SelectBestPair(Dictionary<Tuple<string, string>, List<decimal>> input)
+        private async Task<Tuple<string, string>> SelectBestPair(Dictionary<Tuple<string, string>, decimal> pairs)
         {
-            //todo: extend to make it working for more than one pair. Using one only for proof of concept
+            var pairsFromLowerHalf = new Dictionary<Tuple<string, string>, decimal>();
 
-            bool DontHaveNiceOne = true;
+            foreach (var pair in pairs.Keys)
+            {
+                var ticker = await _exchange.GetTicker(pair.Item1, pair.Item1);
+                var diff = ticker.max - ticker.min;
 
-            if (DontHaveNiceOne)
-                return null;
+                if(ticker.last <= (ticker.min + (diff / 2)))
+                    pairsFromLowerHalf.Add(pair, pairs[pair]);
+            }
 
-            return input.First().Key;
+            var betsStrength = pairs.Values.Max();
+            return pairs.FirstOrDefault(kp => kp.Value == betsStrength).Key;
         }
+
+        //private Tuple<string,string> SelectBestPair(Dictionary<Tuple<string, string>, List<decimal>> input)
+        //{
+        //    //todo: extend to make it working for more than one pair. Using one only for proof of concept
+
+        //    bool DontHaveNiceOne = true;
+
+        //    if (DontHaveNiceOne)
+        //        return null;
+
+        //    return input.First().Key;
+        //}
 
         private bool NeedToSell(string currency1, string currency2, decimal tickerPrice)
         {
